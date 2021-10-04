@@ -5,12 +5,14 @@
 
 import asyncio
 import logging
+import typing as tp
 import uuid
 from pathlib import Path
 
 from grpc import aio
 from grpc import ssl_server_credentials
 
+from openfl.component.director import Director
 from openfl.pipelines import NoCompressionPipeline
 from openfl.protocols import director_pb2
 from openfl.protocols import director_pb2_grpc
@@ -26,7 +28,7 @@ CLIENT_ID_DEFAULT = '__default__'
 class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
     """Director transport class."""
 
-    def __init__(self, *, director_cls, tls: bool = True,
+    def __init__(self, *, director_cls: tp.Type[Director], tls: bool = True,
                  root_certificate: str = None, private_key: str = None, certificate: str = None,
                  listen_host='[::]', listen_port=50051, **kwargs) -> None:
         """Initialize a director object."""

@@ -48,6 +48,7 @@ assigner :
           - filter_training_weights
 
 tasks :
+  defaults: plan/defaults/tasks_torch.yaml
   aggregated_model_validation:
     function : validate
     kwargs   :
@@ -80,3 +81,4 @@ tasks :
       epochs     : 1
   filter_training_weights:
     function : filter_training_weights
+    kwargs: null

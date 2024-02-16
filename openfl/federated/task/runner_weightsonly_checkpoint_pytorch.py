@@ -9,23 +9,23 @@ Contributors: Micah Sheller, Patrick Foley, Brandon Edwards  - DELETEME?
 
 import os
 import subprocess
-
-from .nnunet_v1 import train_nnunet
-
-import numpy as np
 import shutil
 import time
+import pickle as pkl
 
+import numpy as np
 import torch
 
 from openfl.utilities import TensorKey
-from .runner import TaskRunner
-from .external_train_functions import train_mnist_net, load_json
-from .runner_pt_utils import rebuild_model_util, _derive_opt_state_dict, expand_derived_opt_state_dict
-from .runner_pt_utils import initialize_tensorkeys_for_functions_util, to_cpu_numpy
-from .runner_pt_utils import _derive_opt_state_dict, expand_derived_opt_state_dict
+from openfl.utilities.split import split_tensor_dict_for_holdouts
+
+from openfl.federated.task.runner import TaskRunner
+from openfl.federated.task.runner_pt_utils import rebuild_model_util, derive_opt_state_dict, expand_derived_opt_state_dict
+from openfl.federated.task.runner_pt_utils import initialize_tensorkeys_for_functions_util, to_cpu_numpy
+from openfl.federated.task.nnunet_v1 import train_nnunet
 
 def get_train_function():
+    # TODO: Keep?
     return NotImplementedError()
 
 
@@ -36,7 +36,8 @@ class WeightsOnlyPyTorchCheckpointTaskRunner(TaskRunner):
     def __init__(self,
                  checkpoint_out_path = None,
                  checkpoint_in_path = None,
-                 device = 'cuda:0',
+                 device = 'cuda',
+                 gpu_num_string=None,
                  config_path=None,
                  **kwargs):
         """Initialize.
@@ -45,6 +46,7 @@ class WeightsOnlyPyTorchCheckpointTaskRunner(TaskRunner):
             checkpoint_out_path(str)    : Path to the model checkpoint that will be used to start local training.
             checkpoint_in_path(str)     : Path to model checkpoint that results from performing local training.
             device(str)                 : Device ('cpu' or 'cuda') to be used for training and validation script computations.
+            gpu_num_string(str)         : String indicating which gpu(s) to make available
             kwargs                      : Additional key work arguments (will be passed to rebuild_model, initialize_tensor_key_functions, TODO: <Fill this in>).
             config_path(str)            : Path to the configuration file used by the training and validation script.
             TODO: 
@@ -52,15 +54,23 @@ class WeightsOnlyPyTorchCheckpointTaskRunner(TaskRunner):
         super().__init__(**kwargs)
 
         # TODO: Both 'RESET' and 'AGGREGATE' could be suported here too (reset by holding a serialized initial opt state)
-        self.opt_treatment = 'CONTINUE'
+        self.opt_treatment = 'CONTINUE_GLOBAL'
 
         self.checkpoint_out_path = checkpoint_out_path
-        self.checkopint_in_path = checkpoint_in_path
+        self.checkpoint_in_path = checkpoint_in_path
         # TODO: Figure out model initialization (compute out of band and distribute to latest model path? Best if put on a cpu before loading)
         # self.model_init_path = os.path.join(model_dir, model_init_fpath)
-
+        if device not in ['cpu', 'cuda']:
+            raise ValueError("Device argument must be 'cpu' or 'cuda', but {device} was used instead.")
         self.device = device
+        self.gpu_num_string = gpu_num_string
         self.config_path = config_path
+
+        # enable GPUs if appropriate
+        if self.device == 'cuda' and not self.gpu_num_string:
+            raise ValueError(f"If device is 'cuda' then gpu_num must be set rather than allowing to be the default None.")
+        else:
+            os.environ['CUDA_VISIBLE_DEVICES']=self.gpu_num_string
 
         
         
@@ -78,6 +88,19 @@ class WeightsOnlyPyTorchCheckpointTaskRunner(TaskRunner):
 
          # TODO: Overwrite methods below (get and save tensor dict rebuild model, etc.)
      
+
+    def load_checkpoint(self):
+        """
+        Function used to load checkpoint from disk.
+        """
+        checkpoint_dict = torch.load(self.checkpoint_in_path)
+        return checkpoint_dict
+    
+    def save_checkpoint(self, checkpoint):
+        """
+        Function to save checkpoint to disk.
+        """
+        torch.save(checkpoint, self.checkpoint_out_path)
 
     # defining some class methods using some util functions imported above
 
@@ -99,11 +122,11 @@ class WeightsOnlyPyTorchCheckpointTaskRunner(TaskRunner):
             with_opt_vars (bool): Return the tensor dictionary including the
                                   optimizer tensors (Default=False)
         """
-        self.write_tensors_into_checkpoint(tensor_dict=tensor_dict, with_opt_vars=with_opt_vars, checkpoint_path=self.checkpoint_path)
+        self.write_tensors_into_checkpoint(tensor_dict=tensor_dict, with_opt_vars=with_opt_vars)
 
-    def write_tensors_into_checkpoint(self, tensor_dict, with_opt_vars, checkpoint_path):
+    def write_tensors_into_checkpoint(self, tensor_dict, with_opt_vars):
         """
-        Save model state in tensor_dict to in a pickle file at checkpoint_path. Uses pt.save(). 
+        Save model state in tensor_dict to in a pickle file at self.checkpoint_out_path. Uses pt.save(). 
         All state in the checkpoint other than the model state will be kept as is in the file.
         Note: Utilization of a with_opt_vars input will be needed (along with saving an initial state optimizer state on disk),
               will be needed if a self.opt_treatement of 'RESET' or 'AGG' are to be used 
@@ -123,10 +146,7 @@ class WeightsOnlyPyTorchCheckpointTaskRunner(TaskRunner):
 
         Args:
             tensor_dict (dictionary)                 : Dictionary with keys 
-            checkpoint_path (string)                 : Path to pickle file to be
-                                                       created by pt.save().
-            copy_path (string)                : path to checkpoint file used to populate key value pairs other than for keys: self.model_state_dict_key
-                                                and self.optimizer_state_dict_key
+            with_opt_vars (bool)                : Whether or not to save the optimizer state as well (this info will be part of the tensor dict in this case - i.e. tensor_dict = {**model_state, **opt_state})
             kwargs                            : unused
 
         Returns:
@@ -136,7 +156,7 @@ class WeightsOnlyPyTorchCheckpointTaskRunner(TaskRunner):
         # get device for correct placement of tensors
         device = self.device
 
-        checkpoint_dict = torch.load(checkpoint_path, map_location=device)
+        checkpoint_dict = torch.load(self.checkpoint_in_path, map_location=device)
         epoch = checkpoint_dict['epoch']
         new_state = {}
         # grabbing keys from tensor_dict helps to double check we are getting all of those keys
@@ -150,7 +170,7 @@ class WeightsOnlyPyTorchCheckpointTaskRunner(TaskRunner):
             if tensor_dict.pop('__opt_state_needed') == 'true':
                 checkpoint_dict = self._set_optimizer_state(derived_opt_state_dict=tensor_dict, 
                                                             checkpoint_dict=checkpoint_dict)
-        torch.save(checkpoint_dict, checkpoint_path)
+        self.save_checkpoint(checkpoint_dict)
         # we may want to know epoch so that we can properly tell the training script to what epoch to train (NNUnet V1 only supports training with a max_num_epochs setting)
         return epoch
 
@@ -167,9 +187,9 @@ class WeightsOnlyPyTorchCheckpointTaskRunner(TaskRunner):
             dict: Tensor dictionary {**dict, **optimizer_dict}
 
         """
-        self.read_tensors_from_checkpoint(with_opt_vars=with_opt_vars, checkpoint_path=self.checkpoint_path)
+        self.read_tensors_from_checkpoint(with_opt_vars=with_opt_vars)
 
-    def read_tensors_from_checkpoint(with_opt_vars, checkpoint_path):
+    def read_tensors_from_checkpoint(self, with_opt_vars):
         """Return a tensor dictionary interpreted from a checkpoint.
 
         Args:
@@ -180,13 +200,11 @@ class WeightsOnlyPyTorchCheckpointTaskRunner(TaskRunner):
             dict: Tensor dictionary {**dict, **optimizer_dict}
 
         """
-        pickle_dict = torch.load(checkpoint_path)
-
-        state = to_cpu_numpy(pickle_dict['state_dict'])
+        checkpoint_dict = self.load_checkpoint()
+        state = to_cpu_numpy(checkpoint_dict['state_dict'])
 
         if with_opt_vars:
-            raise NotImplementedError(f"Need to support putting optimizer state from aggregator for example into class attribute")
-            opt_state = self.optimizer_state
+            opt_state = self._get_optimizer_state(checkpoint_dict=checkpoint_dict)
             state = {**state, **opt_state}
 
         return state
@@ -211,6 +229,20 @@ class WeightsOnlyPyTorchCheckpointTaskRunner(TaskRunner):
             checkpoint_dict(dict)           : checkpoint dictionary
 
         """
+        self._write_optimizer_state_into_checkpoint(derived_opt_state_dict=derived_opt_state_dict,
+                                              checkpoint_dict=checkpoint_dict, 
+                                              checkpoint_path=self.checkpoint_out_path)
+    
+    def _write_optimizer_state_into_checkpoint(self, derived_opt_state_dict, checkpoint_dict, checkpoint_path):
+        """Write the optimizer state contained within the checkpoint dir into the checkpoint file
+           at checkpoint_dir, keeping some settings already contained within that checkpoint file the same.
+           TODO: Refactor this, we will sparate the custom aspect of the checkpoint dict from the more general code 
+
+        Args:
+            derived_opt_state_dict(bool)    : flattened optimizer state dict
+            checkpoint_dir(path)           : Path to the checkpoint file
+
+        """
         temp_state_dict = expand_derived_opt_state_dict(derived_opt_state_dict, device=self.device)
         # Note: The expansion above only populates the 'params' key of each param group under opt_state_dict['param_groups']
         #       Therefore the default values under the additional keys such as: 'lr', 'momentum', 'dampening', 'weight_decay', 'nesterov', 'maximize', 'foreach', 'differentiable'
@@ -226,13 +258,27 @@ class WeightsOnlyPyTorchCheckpointTaskRunner(TaskRunner):
             checkpoint_dict['optimizer_state_dict']['params'] = derived_opt_state_dict['params']
         checkpoint_dict['optimizer_state_dict']['state'] = derived_opt_state_dict['state']
 
-        return checkpoint_dict
+        torch.save(checkpoint_dict, self.checkpoint_out_path)
 
-    def _get_optimizer_state():
+    def _get_optimizer_state(self, checkpoint_dict):
+        """Get the optimizer state.
+        Args:
+            checkpoint_path(str)           : path to the checkpoint
+        """
+        self._read_opt_state_from_checkpoint(checkpoint_dict)
+
+
+    def _read_opt_state_from_checkpoint(self, checkpoint_dict):
+        """Read the optimizer state from the checkpoint dict and put in tensor dict format.
+        # TODO: Refactor this, we will sparate the custom aspect of the checkpoint dict from the more general code 
+        """
+        derived_opt_state_dict = derive_opt_state_dict(checkpoint_dict['optimizer_state_dict'])
+        return derived_opt_state_dict
 
 
         
     def train(self, col_name, round_num, input_tensor_dict, epochs=2, **kwargs):
+        # TODO: Figure out the right name to use for this method and the default assigner
         """Perform training for a specified number of epochs."""
 
         # will have below, but for now implementing this to test a child class instance

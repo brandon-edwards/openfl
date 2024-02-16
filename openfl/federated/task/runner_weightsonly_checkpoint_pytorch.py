@@ -10,9 +10,7 @@ Contributors: Micah Sheller, Patrick Foley, Brandon Edwards  - DELETEME?
 import os
 import subprocess
 
-import sys
-sys.path.append('/home/edwardsb/repositories/be-GaNDLF/GANDLF/models')
-from nnunet_v1 import train_nnunet
+from .nnunet_v1 import train_nnunet
 
 import numpy as np
 import shutil
@@ -25,6 +23,7 @@ from .runner import TaskRunner
 from .external_train_functions import train_mnist_net, load_json
 from .runner_pt_utils import rebuild_model_util, _derive_opt_state_dict, expand_derived_opt_state_dict
 from .runner_pt_utils import initialize_tensorkeys_for_functions_util, to_cpu_numpy
+from .runner_pt_utils import _derive_opt_state_dict, expand_derived_opt_state_dict
 
 def get_train_function():
     return NotImplementedError()
@@ -133,22 +132,25 @@ class WeightsOnlyPyTorchCheckpointTaskRunner(TaskRunner):
         Returns:
             epoch
         """
+        # TODO: For now leaving the lr_scheduler_state_dict unchanged
         # get device for correct placement of tensors
         device = self.device
 
-        pickle_dict = torch.load(checkpoint_path, map_location=device)
-        epoch = pickle_dict['epoch']
+        checkpoint_dict = torch.load(checkpoint_path, map_location=device)
+        epoch = checkpoint_dict['epoch']
         new_state = {}
-        # grabbing keys from tensor_dict helps to double check we are getting the right keys
+        # grabbing keys from tensor_dict helps to double check we are getting all of those keys
         for k in tensor_dict:
             new_state[k] = torch.from_numpy(tensor_dict[k]).to(device)
-        pickle_dict['state_dict'] = new_state
-        # TODO: Following conditional path not fully supported. Need to support getting the opt state from a class attribute here.
-        #        which will be populated with an initial opt state in the case of the opt_treatment='RESET'
+        checkpoint_dict['state_dict'] = new_state
+        
+        # TODO: We should test this for 'RESET', 'CONTINUE', and 'AGG'
         if with_opt_vars:
-            pickle_dict['optimizer_state_dict'] = self.optimizer_state_dict
-            raise ValueError('Currently not fully supported, need to implement a replacement for the old obtaining of opt state from the runner.optimizer attribute')
-        torch.save(pickle_dict, checkpoint_path)
+            # see if there is state to restore first
+            if tensor_dict.pop('__opt_state_needed') == 'true':
+                checkpoint_dict = self._set_optimizer_state(derived_opt_state_dict=tensor_dict, 
+                                                            checkpoint_dict=checkpoint_dict)
+        torch.save(checkpoint_dict, checkpoint_path)
         # we may want to know epoch so that we can properly tell the training script to what epoch to train (NNUnet V1 only supports training with a max_num_epochs setting)
         return epoch
 
@@ -191,9 +193,40 @@ class WeightsOnlyPyTorchCheckpointTaskRunner(TaskRunner):
 
 
 
-    def _get_weights_names():
+    def _get_weights_names(self, with_opt_vars=False):
+        """
+        Gets model and potentially optimizer state dict key names
+        args:
+        with_opt_vars(bool) : Wether or not to get the optimizer key names 
+        """
+        state = self.get_tensor_dict(with_opt_vars=with_opt_vars)
+        return state.keys()
 
-    def set_optimizer_state():
+    def _set_optimizer_state(self, derived_opt_state_dict, checkpoint_dict):
+        """Set the optimizer state.
+        # TODO: Refactor this, we will sparate the custom aspect of the checkpoint dict from the more general code 
+
+        Args:
+            derived_opt_state_dict(bool)    : flattened optimizer state dict
+            checkpoint_dict(dict)           : checkpoint dictionary
+
+        """
+        temp_state_dict = expand_derived_opt_state_dict(derived_opt_state_dict, device=self.device)
+        # Note: The expansion above only populates the 'params' key of each param group under opt_state_dict['param_groups']
+        #       Therefore the default values under the additional keys such as: 'lr', 'momentum', 'dampening', 'weight_decay', 'nesterov', 'maximize', 'foreach', 'differentiable'
+        #       need to be held over from the their initial values.
+        # FIXME: Figure out whether or not this breaks learning rate scheduling and the like.
+
+        # Letting default values (everything under optimizer.state_dict['param_groups']) stay unchanged (these
+        # are not contained in the temp_state_dict
+        # Assuming therefore that the optimizer.defaults are not changing over course of training. 
+        # Therefore 'param_groups' key is remained unchanged except for 'params' key, value under it and 
+        # we only modify the 'state' key value pairs otherwise
+        for group_idx, group in enumerate(temp_state_dict['param_groups']):
+            checkpoint_dict['optimizer_state_dict']['params'] = derived_opt_state_dict['params']
+        checkpoint_dict['optimizer_state_dict']['state'] = derived_opt_state_dict['state']
+
+        return checkpoint_dict
 
     def _get_optimizer_state():
 

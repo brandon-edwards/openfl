@@ -66,13 +66,15 @@ class WeightsOnlyPyTorchCheckpointTaskRunner(TaskRunner):
         self.gpu_num_string = gpu_num_string
         self.config_path = config_path
 
+        self.training_round_completed = False
+
         # enable GPUs if appropriate
         if self.device == 'cuda' and not self.gpu_num_string:
             raise ValueError(f"If device is 'cuda' then gpu_num must be set rather than allowing to be the default None.")
         else:
             os.environ['CUDA_VISIBLE_DEVICES']=self.gpu_num_string
 
-        
+        # TODO: Currently we use a dummy loader and insert known values of training and validation data size.
         
         #TODO:  Do we need to call dummy train task to initialize the optimizer?
              
@@ -104,8 +106,8 @@ class WeightsOnlyPyTorchCheckpointTaskRunner(TaskRunner):
 
     # defining some class methods using some util functions imported above
 
-    def rebuild_model(self, **kwargs):
-        rebuild_model_util(runner_class=self, **kwargs)
+    def rebuild_model(self, input_tensor_dict, **kwargs):
+        rebuild_model_util(runner_class=self, input_tensor_dict=input_tensor_dict, **kwargs)
 
     def initialize_tensorkeys_for_functions(self, **kwargs):
         initialize_tensorkeys_for_functions_util(runner_class=self, **kwargs)
@@ -122,7 +124,7 @@ class WeightsOnlyPyTorchCheckpointTaskRunner(TaskRunner):
             with_opt_vars (bool): Return the tensor dictionary including the
                                   optimizer tensors (Default=False)
         """
-        self.write_tensors_into_checkpoint(tensor_dict=tensor_dict, with_opt_vars=with_opt_vars)
+        return self.write_tensors_into_checkpoint(tensor_dict=tensor_dict, with_opt_vars=with_opt_vars)
 
     def write_tensors_into_checkpoint(self, tensor_dict, with_opt_vars):
         """
@@ -187,7 +189,7 @@ class WeightsOnlyPyTorchCheckpointTaskRunner(TaskRunner):
             dict: Tensor dictionary {**dict, **optimizer_dict}
 
         """
-        self.read_tensors_from_checkpoint(with_opt_vars=with_opt_vars)
+        return self.read_tensors_from_checkpoint(with_opt_vars=with_opt_vars)
 
     def read_tensors_from_checkpoint(self, with_opt_vars):
         """Return a tensor dictionary interpreted from a checkpoint.
@@ -202,11 +204,9 @@ class WeightsOnlyPyTorchCheckpointTaskRunner(TaskRunner):
         """
         checkpoint_dict = self.load_checkpoint()
         state = to_cpu_numpy(checkpoint_dict['state_dict'])
-
         if with_opt_vars:
             opt_state = self._get_optimizer_state(checkpoint_dict=checkpoint_dict)
             state = {**state, **opt_state}
-
         return state
 
 
@@ -277,7 +277,7 @@ class WeightsOnlyPyTorchCheckpointTaskRunner(TaskRunner):
 
 
         
-    def train(self, col_name, round_num, input_tensor_dict, epochs=2, **kwargs):
+    def train(self, col_name, round_num, input_tensor_dict, epochs, **kwargs):
         # TODO: Figure out the right name to use for this method and the default assigner
         """Perform training for a specified number of epochs."""
 
@@ -290,15 +290,14 @@ class WeightsOnlyPyTorchCheckpointTaskRunner(TaskRunner):
         #             raise KeyError('metrics must be included in kwargs')
         #         param_metrics = kwargs['metrics']
 
-        self.rebuild_model(round_num, input_tensor_dict)
-        # TODO: Is it ok that I am not giving aggregated metrics to the checkpoint file?
+        self.rebuild_model(input_tensor_dict=input_tensor_dict)
         # 1. Insert tensor_dict info into checkpoint
-        epoch = self.set_tensor_dict(tensor_dict=input_tensor_dict, with_opt_vars=False)
+        current_epoch = self.set_tensor_dict(tensor_dict=input_tensor_dict, with_opt_vars=False)
         # 2. Train function existing externally
         # Some todo inside function below
         # TODO: test for off-by-one error
         # TODO: we need to disable validation if possible, and separately call validation  
-        train_nnunet(epochs=epochs, current_epoch=epoch)
+        train_nnunet(epochs=epochs, current_epoch=current_epoch)
        
         """
         # This is actual code to use later that calls an external procedure
@@ -315,13 +314,12 @@ class WeightsOnlyPyTorchCheckpointTaskRunner(TaskRunner):
                                 "--task={}".format(task_yaml)])
         """
         
-        # 3. Load model from native format
-        
-        metrics = self.load_native(self.round_to_model_endpath(model_dir=self.model_dir, model_name=self.model_name, epochs=epochs, round=round_num))
+        # 3. Load metrics from checkpoint
+        (all_tr_losses, all_val_losses, all_val_losses_tr_mode, all_val_eval_metrics) = self.load_checkpoint()['plot_stuff']
+        metrics = {'train_loss': np.mean(all_tr_losses), 
+                   'val_loss_tr_mode': np.mean(all_val_losses_tr_mode), 
+                   'val_eval': np.mean(all_val_eval_metrics)}
 
-        # set the training data size
-        sample_count = int(metrics.pop(self.training_sample_count_key))
-        self.data_loader.set_train_data_size(sample_count)
 
         # 5. Convert to tensorkeys
 
@@ -337,10 +335,9 @@ class WeightsOnlyPyTorchCheckpointTaskRunner(TaskRunner):
 
         # output model tensors (Doesn't include TensorKey)
         output_model_dict = self.get_tensor_dict(with_opt_vars=True)
-        global_model_dict, local_model_dict = split_tensor_dict_for_holdouts(
-            self.logger, output_model_dict,
-            **self.tensor_dict_split_fn_kwargs
-        )
+        global_model_dict, local_model_dict = split_tensor_dict_for_holdouts(logger=self.logger, 
+                                                                             tensor_dict=output_model_dict,
+                                                                             **self.tensor_dict_split_fn_kwargs)
 
         # create global tensorkeys
         global_tensorkey_model_dict = {

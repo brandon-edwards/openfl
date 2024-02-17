@@ -23,6 +23,9 @@
 
 import argparse
 import os
+import numpy as np
+import torch
+import random
 from batchgenerators.utilities.file_and_folder_operations import *
 from nnunet.run.default_configuration import get_default_configuration
 from nnunet.paths import default_plans_identifier
@@ -37,15 +40,22 @@ from nnunet.training.network_training.nnUNetTrainerV2_CascadeFullRes import (
 )
 from nnunet.utilities.task_name_id_conversion import convert_id_to_task_name
 
+def seed_everything(seed=1234):
+    random.seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.backends.cudnn.deterministic = True
+
 
 def train_nnunet(epochs,
                  current_epoch, 
                  network='3d_fullres', 
          network_trainer='nnUNetTrainerV2', 
-         task='0', 
+         task='Task542_FakePostOpp', 
          fold='all', 
          continue_training=True,
-         max_num_epochs = 1,
          validation_only=False, 
          c=False, 
          p=default_plans_identifier, 
@@ -253,6 +263,11 @@ def train_nnunet(epochs,
     args = parser.parse_args()
 
     """
+
+    #############################
+    # Make runs deterministic  \/
+    #############################
+    seed_everything()
 
     task = args.task
     fold = args.fold

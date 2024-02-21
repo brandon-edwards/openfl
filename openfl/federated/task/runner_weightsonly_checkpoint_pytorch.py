@@ -12,6 +12,7 @@ import subprocess
 import shutil
 import time
 import pickle as pkl
+from copy import deepcopy
 
 import numpy as np
 import torch
@@ -36,6 +37,7 @@ class WeightsOnlyPyTorchCheckpointTaskRunner(TaskRunner):
     def __init__(self,
                  checkpoint_out_path = None,
                  checkpoint_in_path = None,
+                 checkpoint_init_path = None,
                  device = 'cuda',
                  gpu_num_string=None,
                  config_path=None,
@@ -53,13 +55,13 @@ class WeightsOnlyPyTorchCheckpointTaskRunner(TaskRunner):
         """ 
         super().__init__(**kwargs)
 
-        # TODO: Both 'RESET' and 'AGGREGATE' could be suported here too (reset by holding a serialized initial opt state)
-        self.opt_treatment = 'CONTINUE_GLOBAL'
+        # TODO: Both 'CONTINUE_GLOBAL' and 'AGG' could be suported here too (test all?)
+        self.opt_treatment = 'RESET'
 
         self.checkpoint_out_path = checkpoint_out_path
         self.checkpoint_in_path = checkpoint_in_path
-        # TODO: Figure out model initialization (compute out of band and distribute to latest model path? Best if put on a cpu before loading)
-        # self.model_init_path = os.path.join(model_dir, model_init_fpath)
+        self.checkpoint_init_path = checkpoint_init_path
+
         if device not in ['cpu', 'cuda']:
             raise ValueError("Device argument must be 'cpu' or 'cuda', but {device} was used instead.")
         self.device = device
@@ -75,27 +77,31 @@ class WeightsOnlyPyTorchCheckpointTaskRunner(TaskRunner):
             os.environ['CUDA_VISIBLE_DEVICES']=self.gpu_num_string
 
         # TODO: Currently we use a dummy loader and insert known values of training and validation data size.
-        
-        #TODO:  Do we need to call dummy train task to initialize the optimizer?
-             
-        #         self.dummy_train()
-        
-        # TODO: Rather than load initial model, place the initial model in last model spot so it gets picked up for training (i.e. always use 'continue' when training) 
-
+      
         # TODO: We'll see, may not use
         self.metrics_information = None
 
         self.required_tensorkeys_for_function = {}
         self.initialize_tensorkeys_for_functions()
 
-         # TODO: Overwrite methods below (get and save tensor dict rebuild model, etc.)
+        # overwrite attribute to account for one optimizer param (in every
+        # child model that does not overwrite get and set tensordict) that is
+        # not a numpy array
+        self.tensor_dict_split_fn_kwargs.update({
+            'holdout_tensor_names': ['__opt_state_needed']
+        })
+
+        # Initialize model
+        self.replace_checkpoint(self.checkpoint_init_path)
      
 
-    def load_checkpoint(self):
+    def load_checkpoint(self, checkpoint_path=None):
         """
         Function used to load checkpoint from disk.
         """
-        checkpoint_dict = torch.load(self.checkpoint_in_path)
+        if not checkpoint_path:
+            checkpoint_path = self.checkpoint_in_path
+        checkpoint_dict = torch.load(checkpoint_path)
         return checkpoint_dict
     
     def save_checkpoint(self, checkpoint):
@@ -113,8 +119,11 @@ class WeightsOnlyPyTorchCheckpointTaskRunner(TaskRunner):
         initialize_tensorkeys_for_functions_util(runner_class=self, **kwargs)
      
     def reset_opt_vars(self):
-        # TODO: Idea would be to save some initial optimizer state in a dictionary that can then be used to reset with
-        raise NotImplementedError()
+        current_checkpoint_dict = self.load_checkpoint()
+        initial_checkpoint_dict = self.load_checkpoint(checkpoint_path=self.checkpoint_init_path)
+        derived_opt_state_dict = self._get_optimizer_state(checkpoint_dict=initial_checkpoint_dict)
+        self._set_optimizer_state(derived_opt_state_dict=derived_opt_state_dict, 
+                                  checkpoint_dict=current_checkpoint_dict)
 
     def set_tensor_dict(self, tensor_dict, with_opt_vars=False):
         """Set the tensor dictionary.
@@ -125,6 +134,9 @@ class WeightsOnlyPyTorchCheckpointTaskRunner(TaskRunner):
                                   optimizer tensors (Default=False)
         """
         return self.write_tensors_into_checkpoint(tensor_dict=tensor_dict, with_opt_vars=with_opt_vars)
+    
+    def replace_checkpoint(self, path_to_replacement):
+        shutil.copyfile(src=path_to_replacement, dst=self.checkpoint_in_path)
 
     def write_tensors_into_checkpoint(self, tensor_dict, with_opt_vars):
         """
@@ -156,17 +168,23 @@ class WeightsOnlyPyTorchCheckpointTaskRunner(TaskRunner):
         """
         # TODO: For now leaving the lr_scheduler_state_dict unchanged
         # get device for correct placement of tensors
+        # TODO: We should test this for 'RESET', 'CONTINUE', and 'AGG'
         device = self.device
 
         checkpoint_dict = torch.load(self.checkpoint_in_path, map_location=device)
         epoch = checkpoint_dict['epoch']
         new_state = {}
-        # grabbing keys from tensor_dict helps to double check we are getting all of those keys
-        for k in tensor_dict:
+        # grabbing keys from the checkpoint state dict, poping from the tensor_dict
+        # Brandon DEBUGGING
+        seen_keys = []
+        for k in checkpoint_dict['state_dict']:
+            if k not in seen_keys:
+                seen_keys.append(k)
+            else:
+                raise ValueError(f"\nKey {k} apears at least twice!!!!/n")
             new_state[k] = torch.from_numpy(tensor_dict[k]).to(device)
         checkpoint_dict['state_dict'] = new_state
         
-        # TODO: We should test this for 'RESET', 'CONTINUE', and 'AGG'
         if with_opt_vars:
             # see if there is state to restore first
             if tensor_dict.pop('__opt_state_needed') == 'true':
@@ -234,9 +252,10 @@ class WeightsOnlyPyTorchCheckpointTaskRunner(TaskRunner):
                                               checkpoint_path=self.checkpoint_out_path)
     
     def _write_optimizer_state_into_checkpoint(self, derived_opt_state_dict, checkpoint_dict, checkpoint_path):
-        """Write the optimizer state contained within the checkpoint dir into the checkpoint file
-           at checkpoint_dir, keeping some settings already contained within that checkpoint file the same.
-           TODO: Refactor this, we will sparate the custom aspect of the checkpoint dict from the more general code 
+        """Write the optimizer state contained within the derived_opt_state_dict into the checkpoint_dict,
+           keeping some settings already contained within that checkpoint file the same, then write the resulting
+           checkpoint back to the checkpoint path.
+           TODO: Refactor this, we will separate the custom aspect of the checkpoint dict from the more general code 
 
         Args:
             derived_opt_state_dict(bool)    : flattened optimizer state dict
@@ -249,30 +268,40 @@ class WeightsOnlyPyTorchCheckpointTaskRunner(TaskRunner):
         #       need to be held over from the their initial values.
         # FIXME: Figure out whether or not this breaks learning rate scheduling and the like.
 
-        # Letting default values (everything under optimizer.state_dict['param_groups']) stay unchanged (these
-        # are not contained in the temp_state_dict
-        # Assuming therefore that the optimizer.defaults are not changing over course of training. 
-        # Therefore 'param_groups' key is remained unchanged except for 'params' key, value under it and 
-        # we only modify the 'state' key value pairs otherwise
+        # Letting default values (everything under temp_state_dict['param_groups'] except the 'params' key) 
+        # stay unchanged (these are not contained in the temp_state_dict)
+        # Assuming therefore that the optimizer.defaults (which hold this same info) are not changing over course of training. 
+        # We only modify the 'state' key value pairs otherwise
         for group_idx, group in enumerate(temp_state_dict['param_groups']):
-            checkpoint_dict['optimizer_state_dict']['params'] = derived_opt_state_dict['params']
-        checkpoint_dict['optimizer_state_dict']['state'] = derived_opt_state_dict['state']
+            checkpoint_dict['optimizer_state_dict']['param_groups'][group_idx]['params'] = group['params']
+        checkpoint_dict['optimizer_state_dict']['state'] = temp_state_dict['state']
 
-        torch.save(checkpoint_dict, self.checkpoint_out_path)
+        torch.save(checkpoint_dict, checkpoint_path)
 
     def _get_optimizer_state(self, checkpoint_dict):
         """Get the optimizer state.
         Args:
             checkpoint_path(str)           : path to the checkpoint
         """
-        self._read_opt_state_from_checkpoint(checkpoint_dict)
+        return self._read_opt_state_from_checkpoint(checkpoint_dict)
 
 
     def _read_opt_state_from_checkpoint(self, checkpoint_dict):
         """Read the optimizer state from the checkpoint dict and put in tensor dict format.
         # TODO: Refactor this, we will sparate the custom aspect of the checkpoint dict from the more general code 
         """
-        derived_opt_state_dict = derive_opt_state_dict(checkpoint_dict['optimizer_state_dict'])
+
+        opt_state_dict = deepcopy(checkpoint_dict['optimizer_state_dict'])
+
+        # Optimizer state might not have some parts representing frozen parameters
+        # So we do not synchronize them
+        param_keys_with_state = set(opt_state_dict['state'].keys())
+        for group in opt_state_dict['param_groups']:
+            local_param_set = set(group['params'])
+            params_to_sync = local_param_set & param_keys_with_state
+            group['params'] = sorted(params_to_sync)
+        derived_opt_state_dict = derive_opt_state_dict(opt_state_dict)
+
         return derived_opt_state_dict
 
 

@@ -56,6 +56,8 @@ def derive_opt_state_dict(opt_state_dict):
         opt_state_dict['state'][example_state_key].keys()
     )
 
+    
+
     # We assume that the state collected for all params in all param groups is
     # the same.
     # We also assume that whether or not the associated values to these state
@@ -86,7 +88,7 @@ def derive_opt_state_dict(opt_state_dict):
         else:
             state_subkey_tags.append('')
     state_subkeys_and_tags = list(zip(state_subkeys, state_subkey_tags))
-
+    
     # Forming the flattened dict, using a concatenation of group index,
     # subindex, tag, and subkey inserted into the flattened dict key -
     # needed for reconstruction.
@@ -108,7 +110,6 @@ def derive_opt_state_dict(opt_state_dict):
     derived_opt_state_dict['__opt_group_lengths'] = np.array(
         nb_params_per_group
     )
-
     return derived_opt_state_dict
 
 
@@ -162,8 +163,10 @@ def expand_derived_opt_state_dict(derived_opt_state_dict, device):
                     new_v = int(derived_opt_state_dict.pop(flat_key))
                 opt_state_dict['state'][this_id][subkey] = new_v
 
-    # sanity check that we did not miss any optimizer state
-    assert len(derived_opt_state_dict) == 0
+    # sanity check that we did not miss any optimizer state (after removing __opt_state_needed)
+    derived_opt_state_dict.pop('__opt_state_needed')
+    if len(derived_opt_state_dict) != 0:
+        raise ValueError(f"Opt state should have been exausted, but we have left: {derived_opt_state_dict}")
 
     return opt_state_dict
 

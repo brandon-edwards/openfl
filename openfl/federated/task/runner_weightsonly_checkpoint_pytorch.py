@@ -348,7 +348,6 @@ class WeightsOnlyPyTorchCheckpointTaskRunner(TaskRunner):
         (all_tr_losses, all_val_losses, all_val_losses_tr_mode, all_val_eval_metrics) = self.load_checkpoint()['plot_stuff']
         # these metrics are appended to the checkopint each epoch, so we select the most recent epoch
         metrics = {'train_loss': all_tr_losses[-1], 
-                   'val_loss_tr_mode': all_val_losses_tr_mode[-1], 
                    'val_eval': all_val_eval_metrics[-1]}
 
 

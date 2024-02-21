@@ -56,7 +56,7 @@ class WeightsOnlyPyTorchCheckpointTaskRunner(TaskRunner):
         super().__init__(**kwargs)
 
         # TODO: Both 'CONTINUE_GLOBAL' and 'AGG' could be suported here too (test all?)
-        self.opt_treatment = 'RESET'
+        self.opt_treatment = 'CONTINUE_GLOBAL'
 
         self.checkpoint_out_path = checkpoint_out_path
         self.checkpoint_in_path = checkpoint_in_path
@@ -166,9 +166,10 @@ class WeightsOnlyPyTorchCheckpointTaskRunner(TaskRunner):
         Returns:
             epoch
         """
-        # TODO: For now leaving the lr_scheduler_state_dict unchanged
+        # TODO: For now leaving the lr_scheduler_state_dict unchanged (this may be best though)
+        # TODO: Do we want to test this for 'RESET', 'CONTINUE_GLOBAL'?
+
         # get device for correct placement of tensors
-        # TODO: We should test this for 'RESET', 'CONTINUE', and 'AGG'
         device = self.device
 
         checkpoint_dict = torch.load(self.checkpoint_in_path, map_location=device)
@@ -345,9 +346,10 @@ class WeightsOnlyPyTorchCheckpointTaskRunner(TaskRunner):
         
         # 3. Load metrics from checkpoint
         (all_tr_losses, all_val_losses, all_val_losses_tr_mode, all_val_eval_metrics) = self.load_checkpoint()['plot_stuff']
-        metrics = {'train_loss': np.mean(all_tr_losses), 
-                   'val_loss_tr_mode': np.mean(all_val_losses_tr_mode), 
-                   'val_eval': np.mean(all_val_eval_metrics)}
+        # these metrics are appended to the checkopint each epoch, so we select the most recent epoch
+        metrics = {'train_loss': all_tr_losses[-1], 
+                   'val_loss_tr_mode': all_val_losses_tr_mode[-1], 
+                   'val_eval': all_val_eval_metrics[-1]}
 
 
         # 5. Convert to tensorkeys

@@ -55,8 +55,9 @@ class WeightsOnlyPyTorchCheckpointTaskRunner(TaskRunner):
         """ 
         super().__init__(**kwargs)
 
-        # TODO: Both 'CONTINUE_GLOBAL' and 'AGG' could be suported here too (test all?)
-        self.opt_treatment = 'CONTINUE_GLOBAL'
+        # TODO: Both 'CONTINUE_GLOBAL' and 'RESET' could be suported here too (currently RESET throws an exception related to a 
+        # missmatch in size coming from the momentum buffer and other stuff either in the model or optimizer)
+        self.opt_treatment = 'CONTINUE_LOCAL'
 
         self.checkpoint_out_path = checkpoint_out_path
         self.checkpoint_in_path = checkpoint_in_path
@@ -320,7 +321,7 @@ class WeightsOnlyPyTorchCheckpointTaskRunner(TaskRunner):
         #             raise KeyError('metrics must be included in kwargs')
         #         param_metrics = kwargs['metrics']
 
-        self.rebuild_model(input_tensor_dict=input_tensor_dict)
+        self.rebuild_model(input_tensor_dict=input_tensor_dict, **kwargs)
         # 1. Insert tensor_dict info into checkpoint
         current_epoch = self.set_tensor_dict(tensor_dict=input_tensor_dict, with_opt_vars=False)
         # 2. Train function existing externally

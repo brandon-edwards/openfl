@@ -11,21 +11,20 @@ from openfl.utilities.split import split_tensor_dict_for_holdouts
 from openfl.utilities import TensorKey
 
 
-def rebuild_model_util(runner_class, input_tensor_dict, validation=False):
+def rebuild_model_util(runner_class, input_tensor_dict, testing_with_opt_setting=False):
         """
-        Parse tensor names and update weights of model. Handles the optimizer treatment.
+        Parse tensor names and update weights of model. Assumes opt_treatement == CONTINUE_LOCAL, but
+        allows for writing in optimizer variables for testing purposes
 
         Returns:
             None
         """
-        if runner_class.opt_treatment == 'RESET':
-            runner_class.reset_opt_vars()
-            runner_class.set_tensor_dict(input_tensor_dict, with_opt_vars=False)
-        elif (runner_class.training_round_completed
-              and runner_class.opt_treatment == 'CONTINUE_GLOBAL' and not validation):
-            runner_class.set_tensor_dict(input_tensor_dict, with_opt_vars=True)
+        if testing_with_opt_setting:
+            with_opt_vars = True
         else:
-            runner_class.set_tensor_dict(input_tensor_dict, with_opt_vars=False)
+            with_opt_vars = False
+
+        runner_class.set_tensor_dict(input_tensor_dict, with_opt_vars=with_opt_vars)
 
 
 def derive_opt_state_dict(opt_state_dict):

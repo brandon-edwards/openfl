@@ -351,7 +351,7 @@ def train_nnunet(epochs,
     # TODO: Below doesn't seem to be working (still saving 'best' model not latest)
     # we want latest checkoint only (not best or any intermediate) 
     trainer.save_final_checkpoint = (
-        False  # whether or not to save the final checkpoint
+        True  # whether or not to save the final checkpoint
     )
     trainer.save_best_checkpoint = (
         False  # whether or not to save the best checkpoint according to

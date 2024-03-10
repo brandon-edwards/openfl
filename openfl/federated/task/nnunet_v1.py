@@ -53,15 +53,15 @@ def train_nnunet(epochs,
                  current_epoch, 
                  network='3d_fullres', 
          network_trainer='nnUNetTrainerV2', 
-         task='Task542_FakePostOpp', 
-         fold='all', 
+         task='Task543_FakePostOpp_More', 
+         fold='0', 
          continue_training=True,
          validation_only=False, 
          c=False, 
          p=default_plans_identifier, 
          use_compressed_data=False, 
-         deterministic=False, 
-         pz=False, 
+         deterministic=True, 
+         npz=False, 
          find_lr=False, 
          valbest=False, 
          fp32=False, 
@@ -366,6 +366,7 @@ def train_nnunet(epochs,
     )
     # TODO: test for off-by-one error
     trainer.max_num_epochs = current_epoch + epochs
+    trainer.epoch = current_epoch
 
     # TODO: we need to disable validation if possible, and separately call validation
     trainer.initialize(not validation_only)

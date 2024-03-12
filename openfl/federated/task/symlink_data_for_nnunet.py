@@ -104,7 +104,7 @@ def main(postopp_pardir, first_three_digit_task_num, task_name, timestamp_select
                                     │           └── AAAC_extra_2008.12.10_final_seg.nii.gz
                                     └── report.yaml
 
-    first_three_digit_task_num(str): Should start with '5'. If fedsim != 1 (instead N), all N task numbers starting with this number will be used.
+    first_three_digit_task_num(str): Should start with '5'. If fedsim == N, all N task numbers starting with this number will be used.
     task_name(str)                 : Any string task name.
     timestamps(str)                : Indicates how to determine the timestamp to pick
                                    for each subject ID at the source: 'latest' and 'earliest' are the only ones supported so far
@@ -129,7 +129,7 @@ def main(postopp_pardir, first_three_digit_task_num, task_name, timestamp_select
             nnunet_labels_train_pardir = os.path.join(nnunet_dst_pardir, 'labelsTr')
 
             if os.path.exists(nnunet_images_train_pardir) and os.path.exists(nnunet_labels_train_pardir):
-                raise ValueError(f"Train images pardir: {nnunet_images_train_pardir} already exists, and train labels pardir: {nnunet_labels_train_pardir} both already exist. Please move them both and rerun to prevent overwriting.")
+                raise ValueError(f"Train images pardirs: {nnunet_images_train_pardir} and {nnunet_labels_train_pardir} both already exist. Please move them both and rerun to prevent overwriting.")
             elif os.path.exists(nnunet_images_train_pardir):
                 raise ValueError(f"Train images pardir: {nnunet_images_train_pardir} already exists, please move and run again to prevent overwriting.")
             elif os.path.exists(nnunet_labels_train_pardir):
@@ -139,16 +139,16 @@ def main(postopp_pardir, first_three_digit_task_num, task_name, timestamp_select
             os.makedirs(nnunet_labels_train_pardir, exist_ok=False) 
          
             nnunet_dst_pardirs.append(nnunet_dst_pardir)
-            nnunet_images_train_pardirs.append(nnunet_labels_train_pardir)
+            nnunet_images_train_pardirs.append(nnunet_images_train_pardir)
             nnunet_labels_train_pardirs.append(nnunet_labels_train_pardir)
 
-        return zip(three_digit_task_nums, nnunet_dst_pardirs, nnunet_images_train_pardirs, nnunet_labels_train_pardirs)
+        return list(zip(three_digit_task_nums, nnunet_dst_pardirs, nnunet_images_train_pardirs, nnunet_labels_train_pardirs))
 
     # some argument inspection
-    task_digit_length = len(first_three_digit_task_num)
+    task_digit_length = len(str(first_three_digit_task_num))
     if task_digit_length != 3:
          raise ValueError(f'The number of digits in {first_three_digit_task_num} should be 3, but it is: {task_digit_length} instead.')
-    if first_three_digit_task_num[0] != '5':
+    if str(first_three_digit_task_num)[0] != '5':
          raise ValueError(f"The three digit task number: {first_three_digit_task_num} should start with 5 to avoid NNUnet repository tasks, but it starts with {three_digit_task_num[0]}")    
 
     task_folder_info = create_task_folders(first_three_digit_task_num=first_three_digit_task_num, fedsim=fedsim)
@@ -200,13 +200,18 @@ if __name__ == '__main__':
             type=str,
             help="Parent directory to postopp data (should have 'data' and 'labels' subdirectories).")
         argparser.add_argument(
-            '--three_digit_task_num',
-            type=str,
-            help="Three digit number identyfing the task (should start with 5)")
+            '--first_three_digit_task_num',
+            type=int,
+            help="Should start with '5'. If fedsim == N, all N task numbers starting with this number will be used.")
         argparser.add_argument(
             '--task_name',
             type=str,
-            help="NNUnet data task directory customizing 'XXX' and 'MYTASK' but otherwise: .../nnUNet_raw_data_base/nnUNet_raw_data/TaskXXX_MYTASK.")     
+            help="NNUnet data task directory customizing 'XXX' and 'MYTASK' but otherwise: .../nnUNet_raw_data_base/nnUNet_raw_data/TaskXXX_MYTASK.")
+        argparser.add_argument(
+            '--fedsim',
+            type=int,
+            default=1,
+            help="Number of symulated insitutions to shard the data into.")     
 
         args = argparser.parse_args()
 

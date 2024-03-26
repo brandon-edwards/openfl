@@ -3,9 +3,7 @@ import argparse
 
 import subprocess
 
-import pickle as pkl
 from nnunet.dataset_conversion.utils import generate_dataset_json
-from nnunet.paths import default_plans_identifier
 
 num_to_modality = {'_0000': '_brain_t1n.nii.gz',
                    '_0001': '_brain_t2w.nii.gz',
@@ -17,72 +15,37 @@ def subject_time_to_mask_path(pardir, subject, timestamp):
      return os.path.join(pardir, 'labels', '.tumor_segmentation_backup', subject, timestamp,'TumorMasksForQC', mask_fname)
 
 
-def model_folder(network, task, network_trainer, plans_identifier, fold, results_folder=os.environ['RESULTS_FOLDER']):
-    return os.path.join(results_folder, 'nnUNet',network, task, network_trainer + '__' + plans_identifier, f'fold_{fold}')
-
-
-def model_paths_from_folder(model_folder):
-    return [os.path.join(model_folder, model_fname) for model_fname in ['model_final_checkpoint.model', 'model_final_checkpoint.model.pkl']]
-
-
-def plan_path(network, task, plans_identifier):
-    preprocessed_path = os.environ['nnUNet_preprocessed']
-    plan_dirpath = os.path.join(preprocessed_path, task)
-    if network =='2d':
-        plan_path = os.path.join(plan_dirpath, plans_identifier + "_plans_2D.pkl")
+def symlink_one_subject(postopp_subject_dir, postopp_data_dirpath, postopp_labels_dirpath, nnunet_images_train_pardir, nnunet_labels_train_pardir, timestamp_selection):
+    postopp_subject_dirpath = os.path.join(postopp_data_dirpath, postopp_subject_dir)
+    timestamps = sorted(list(os.listdir(postopp_subject_dirpath)))
+    if timestamp_selection == 'latest':
+        timestamp = timestamps[-1]
+    elif timestamp_selection == 'earliest':
+        timestamp = timestamps[0]
     else:
-        plan_path = os.path.join(plan_dirpath, plans_identifier + "_plans_3D.pkl")
-
-    return plan_path
-
-
-def normalize_architecture(reference_plan_path, target_plan_path):
-    """
-    Take the plan file from reference_plan_path and use its contents to copy architecture into target_plan_path
-
-    NOTE: Here we perform some checks and protection steps so that our assumptions if not correct will more
-          likely leed to an exception.
+        raise ValueError(f"timestamp_selection currently only supports 'latest' and 'earliest', but you have requested: '{timestamp_selection}'")
+            
+    postopp_subject_timestamp_dirpath = os.path.join(postopp_subject_dirpath, timestamp)
+    postopp_subject_timestamp_label_dirpath = os.path.join(postopp_labels_dirpath, postopp_subject_dir, timestamp)
+    if not os.path.exists(postopp_subject_timestamp_label_dirpath):
+        raise ValueError(f"Subject label file for data at: {postopp_subject_timestamp_dirpath} was not found in the expected location: {postopp_subject_timestamp_label_dirpath}")
     
-    """
-    
-    assert_same_keys = ['num_stages', 'num_modalities', 'modalities', 'normalization_schemes', 'num_classes', 'all_classes', 'base_num_features', 
-                        'use_mask_for_norm', 'keep_only_largest_region', 'min_region_size_per_class', 'min_size_per_class', 'transpose_forward', 
-                        'transpose_backward', 'preprocessor_name', 'conv_per_stage', 'data_identifier']
-    copy_over_keys = ['plans_per_stage']
-    nullify_keys = ['original_spacings', 'original_sizes']
-    leave_alone_keys = ['list_of_npz_files', 'preprocessed_data_folder', 'dataset_properties']
- 
+    timed_subject = postopp_subject_dir + '_' + timestamp
 
-    # check I got all keys here
-    assert set(copy_over_keys).union(set(assert_same_keys)).union(set(nullify_keys)).union(set(leave_alone_keys)) == set(['num_stages', 'num_modalities', 'modalities', 'normalization_schemes', 'dataset_properties', 'list_of_npz_files', 'original_spacings', 'original_sizes', 'preprocessed_data_folder', 'num_classes', 'all_classes', 'base_num_features', 'use_mask_for_norm', 'keep_only_largest_region', 'min_region_size_per_class', 'min_size_per_class', 'transpose_forward', 'transpose_backward', 'data_identifier', 'plans_per_stage', 'preprocessor_name', 'conv_per_stage'])
-    
-    def get_pickle_obj(path):
-        with open(path, 'rb') as _file:
-            plan= pkl.load(_file)
-        return plan 
+    # Copy label first
+    label_src_path = os.path.join(postopp_subject_timestamp_label_dirpath, timed_subject + '_final_seg.nii.gz')
+    label_dst_path = os.path.join(nnunet_labels_train_pardir, timed_subject + '.nii.gz')
+    os.symlink(src=label_src_path, dst=label_dst_path)
 
-    def write_pickled_obj(obj, path):
-        with open(path, 'wb') as _file:
-            pkl.dump(obj, _file) 
-
-    reference_plan = get_pickle_obj(path=reference_plan_path)
-    target_plan = get_pickle_obj(path=target_plan_path)
-
-    for key in assert_same_keys:
-        if reference_plan[key] != target_plan[key]:
-            raise ValueError(f"normalize architecture failed since the reference and target plans differed in at least key: {key}")
-    for key in copy_over_keys:
-        target_plan[key] = reference_plan[key]
-    for key in nullify_keys:
-        target_plan[key] = None
-    # leave alone keys are left alone :)
-
-    # write back to target plan
-    write_pickled_obj(obj=target_plan, path=target_plan_path) 
+    # Copy images
+    for num in num_to_modality:
+        src_path = os.path.join(postopp_subject_timestamp_dirpath, timed_subject + num_to_modality[num])
+        dst_path = os.path.join(nnunet_images_train_pardir,timed_subject + num + '.nii.gz')
+        os.symlink(src=src_path, dst=dst_path)
     
 
 
-def main(postopp_pardir, first_three_digit_task_num, task_name, network, network_trainer, fold, timestamp_selection='latest', fedsim=1):
+def main(postopp_pardir, first_three_digit_task_num, task_name, timestamp_selection='latest', fedsim=1):
     """
     Generates symlinks to be used for NNUnet training, assuming we already have a 
     dataset on file coming from MLCommons RANO experiment data prep.
@@ -141,7 +104,7 @@ def main(postopp_pardir, first_three_digit_task_num, task_name, network, network
                                     │           └── AAAC_extra_2008.12.10_final_seg.nii.gz
                                     └── report.yaml
 
-    first_three_digit_task_num(str): Should start with '5'. If fedsim == N, all N task numbers starting with this number will be used.
+    first_three_digit_task_num(str): Should start with '5'. If fedsim != 1 (instead N), all N task numbers starting with this number will be used.
     task_name(str)                 : Any string task name.
     timestamps(str)                : Indicates how to determine the timestamp to pick
                                    for each subject ID at the source: 'latest' and 'earliest' are the only ones supported so far
@@ -156,18 +119,17 @@ def main(postopp_pardir, first_three_digit_task_num, task_name, network, network
         nnunet_images_train_pardirs = []
         nnunet_labels_train_pardirs = []
 
-        task_nums = range(first_three_digit_task_num, first_three_digit_task_num + fedsim)
-        tasks = [f'Task{str(num)}_{task_name}' for num in task_nums]
-        for task in tasks:
+        three_digit_task_nums = [str(num) for num in range(first_three_digit_task_num, first_three_digit_task_num + fedsim)]
+        for three_digit_task_num in three_digit_task_nums:
 
             # The NNUnet data path is obtained from an environmental variable
-            nnunet_dst_pardir = os.path.join(os.environ['nnUNet_raw_data_base'], 'nnUNet_raw_data', f'{task}')
+            nnunet_dst_pardir = os.path.join(os.environ['nnUNet_raw_data_base'], 'nnUNet_raw_data', f'Task{three_digit_task_num}_{task_name}')
              
             nnunet_images_train_pardir = os.path.join(nnunet_dst_pardir, 'imagesTr')
             nnunet_labels_train_pardir = os.path.join(nnunet_dst_pardir, 'labelsTr')
 
             if os.path.exists(nnunet_images_train_pardir) and os.path.exists(nnunet_labels_train_pardir):
-                raise ValueError(f"Train images pardirs: {nnunet_images_train_pardir} and {nnunet_labels_train_pardir} both already exist. Please move them both and rerun to prevent overwriting.")
+                raise ValueError(f"Train images pardir: {nnunet_images_train_pardir} already exists, and train labels pardir: {nnunet_labels_train_pardir} both already exist. Please move them both and rerun to prevent overwriting.")
             elif os.path.exists(nnunet_images_train_pardir):
                 raise ValueError(f"Train images pardir: {nnunet_images_train_pardir} already exists, please move and run again to prevent overwriting.")
             elif os.path.exists(nnunet_labels_train_pardir):
@@ -177,44 +139,16 @@ def main(postopp_pardir, first_three_digit_task_num, task_name, network, network
             os.makedirs(nnunet_labels_train_pardir, exist_ok=False) 
          
             nnunet_dst_pardirs.append(nnunet_dst_pardir)
-            nnunet_images_train_pardirs.append(nnunet_images_train_pardir)
+            nnunet_images_train_pardirs.append(nnunet_labels_train_pardir)
             nnunet_labels_train_pardirs.append(nnunet_labels_train_pardir)
 
-        return list(zip(task_nums, tasks, nnunet_dst_pardirs, nnunet_images_train_pardirs, nnunet_labels_train_pardirs))
-    
-    def symlink_one_subject(postopp_subject_dir, postopp_data_dirpath, postopp_labels_dirpath, nnunet_images_train_pardir, nnunet_labels_train_pardir, timestamp_selection):
-        postopp_subject_dirpath = os.path.join(postopp_data_dirpath, postopp_subject_dir)
-        timestamps = sorted(list(os.listdir(postopp_subject_dirpath)))
-        if timestamp_selection == 'latest':
-            timestamp = timestamps[-1]
-        elif timestamp_selection == 'earliest':
-            timestamp = timestamps[0]
-        else:
-            raise ValueError(f"timestamp_selection currently only supports 'latest' and 'earliest', but you have requested: '{timestamp_selection}'")
-                
-        postopp_subject_timestamp_dirpath = os.path.join(postopp_subject_dirpath, timestamp)
-        postopp_subject_timestamp_label_dirpath = os.path.join(postopp_labels_dirpath, postopp_subject_dir, timestamp)
-        if not os.path.exists(postopp_subject_timestamp_label_dirpath):
-            raise ValueError(f"Subject label file for data at: {postopp_subject_timestamp_dirpath} was not found in the expected location: {postopp_subject_timestamp_label_dirpath}")
-        
-        timed_subject = postopp_subject_dir + '_' + timestamp
-
-        # Copy label first
-        label_src_path = os.path.join(postopp_subject_timestamp_label_dirpath, timed_subject + '_final_seg.nii.gz')
-        label_dst_path = os.path.join(nnunet_labels_train_pardir, timed_subject + '.nii.gz')
-        os.symlink(src=label_src_path, dst=label_dst_path)
-
-        # Copy images
-        for num in num_to_modality:
-            src_path = os.path.join(postopp_subject_timestamp_dirpath, timed_subject + num_to_modality[num])
-            dst_path = os.path.join(nnunet_images_train_pardir,timed_subject + num + '.nii.gz')
-            os.symlink(src=src_path, dst=dst_path)
+        return zip(three_digit_task_nums, nnunet_dst_pardirs, nnunet_images_train_pardirs, nnunet_labels_train_pardirs)
 
     # some argument inspection
-    task_digit_length = len(str(first_three_digit_task_num))
+    task_digit_length = len(first_three_digit_task_num)
     if task_digit_length != 3:
          raise ValueError(f'The number of digits in {first_three_digit_task_num} should be 3, but it is: {task_digit_length} instead.')
-    if str(first_three_digit_task_num)[0] != '5':
+    if first_three_digit_task_num[0] != '5':
          raise ValueError(f"The three digit task number: {first_three_digit_task_num} should start with 5 to avoid NNUnet repository tasks, but it starts with {three_digit_task_num[0]}")    
 
     task_folder_info = create_task_folders(first_three_digit_task_num=first_three_digit_task_num, fedsim=fedsim)
@@ -234,7 +168,7 @@ def main(postopp_pardir, first_three_digit_task_num, task_name, network, network
     
     for shard_idx, postopp_subject_dirs in enumerate(subject_shards):
         print(f"\n######### CREATING SYMLINKS TO POSTOPP DATA FOR COLLABORATOR {shard_idx} #########\n") 
-        task_num, task, nnunet_dst_pardir, nnunet_images_train_pardir, nnunet_labels_train_pardir = task_folder_info[shard_idx]
+        three_digit_task_num, nnunet_dst_pardir, nnunet_images_train_pardir, nnunet_labels_train_pardir = task_folder_info[shard_idx]
         for postopp_subject_dir in postopp_subject_dirs:
             symlink_one_subject(postopp_subject_dir=postopp_subject_dir, 
                                 postopp_data_dirpath=postopp_data_dirpath, 
@@ -255,32 +189,7 @@ def main(postopp_pardir, first_three_digit_task_num, task_name, network, network
         
         # Now call the os process to preprocess the data
         print(f"\n######### OS CALL TO PREPROCESS DATA FOR COLLABORATOR {shard_idx} #########\n")
-        subprocess.run(["nnUNet_plan_and_preprocess",  "-t",  f"{task_num}", "--verify_dataset_integrity"])
-
-    # normalize the architecture using info from the first collaborators
-    _, col_0_task, _, _, _ = task_folder_info[0]
-    col_0_plan_path = plan_path(network=network, task=col_0_task, plans_identifier=default_plans_identifier)
-
-    col_0_model_folder = model_folder(network=network, 
-                                      task=col_0_task, 
-                                      network_trainer=network_trainer, 
-                                      plans_identifier=default_plans_identifier, 
-                                      fold=fold)
-    os.makedirs(col_0_model_folder, exist_ok=False)
-    WORKING HERE
-    # TODO: Here is where we grab the model files from an outside reference spot
-    
-    model_paths_from_folder(model_folder=model_folder(network, task, network_trainer, plans_identifier, fold))
-    return os.path.join(results_folder, 'nnUNet',network, task, network_trainer + '__' + plans_identifier, f'fold_{fold}')
-
-
-
-    for _, task, _, _, _ in task_folder_info[1:]:
-        target_plan_path = plan_path(network=network, task=task, plans_identifier=default_plans_identifier)
-        normalize_architecture(reference_plan_path=col_0_plan_path, target_plan_path=target_plan_path)
-
-    # create the model folders for all collaborators, filling in with model files from collaborator one
-    
+        subprocess.run(["nnUNet_plan_and_preprocess",  "-t",  f"{three_digit_task_num}", "--verify_dataset_integrity"])
  
 
 if __name__ == '__main__':
@@ -291,18 +200,13 @@ if __name__ == '__main__':
             type=str,
             help="Parent directory to postopp data (should have 'data' and 'labels' subdirectories).")
         argparser.add_argument(
-            '--first_three_digit_task_num',
-            type=int,
-            help="Should start with '5'. If fedsim == N, all N task numbers starting with this number will be used.")
+            '--three_digit_task_num',
+            type=str,
+            help="Three digit number identyfing the task (should start with 5)")
         argparser.add_argument(
             '--task_name',
             type=str,
-            help="NNUnet data task directory customizing 'XXX' and 'MYTASK' but otherwise: .../nnUNet_raw_data_base/nnUNet_raw_data/TaskXXX_MYTASK.")
-        argparser.add_argument(
-            '--fedsim',
-            type=int,
-            default=1,
-            help="Number of symulated insitutions to shard the data into.")     
+            help="NNUnet data task directory customizing 'XXX' and 'MYTASK' but otherwise: .../nnUNet_raw_data_base/nnUNet_raw_data/TaskXXX_MYTASK.")     
 
         args = argparser.parse_args()
 

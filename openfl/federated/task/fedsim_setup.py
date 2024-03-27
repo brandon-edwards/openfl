@@ -82,13 +82,18 @@ def main(postopp_pardir, first_three_digit_task_num, task_name, network, network
     
     # task_folder_info is a zipped lists indexed over tasks (collaborators)
     #                  zip(task_nums, tasks, nnunet_dst_pardirs, nnunet_images_train_pardirs, nnunet_labels_train_pardirs)
-    task_folder_info = setup_fedsim_data(postopp_pardir=postopp_pardir, 
-                                         first_three_digit_task_num=first_three_digit_task_num, 
-                                         task_name=task_name, 
-                                         timestamp_selection=timestamp_selection, 
-                                         num_institutions=num_institutions)
+    task_nums, tasks, nnunet_dst_pardirs, nnunet_images_train_pardirs, nnunet_labels_train_pardirs = \
+        setup_fedsim_data(postopp_pardir=postopp_pardir, 
+                          first_three_digit_task_num=first_three_digit_task_num, 
+                          task_name=task_name, 
+                          timestamp_selection=timestamp_selection, 
+                          num_institutions=num_institutions)
     
-    setup_fedsim_models()
+    setup_fedsim_models(network=network, 
+                        network_trainer=network_trainer, 
+                        tasks=tasks, 
+                        plans_identifier=plans_identifier, 
+                        fold=fold)
 
         
 

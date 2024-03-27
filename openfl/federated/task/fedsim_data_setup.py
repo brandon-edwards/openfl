@@ -47,7 +47,7 @@ def create_task_folders(first_three_digit_task_num, num_institutions, task_name)
         nnunet_images_train_pardirs.append(nnunet_images_train_pardir)
         nnunet_labels_train_pardirs.append(nnunet_labels_train_pardir)
 
-    return list(zip(task_nums, tasks, nnunet_dst_pardirs, nnunet_images_train_pardirs, nnunet_labels_train_pardirs))
+    return task_nums, tasks, nnunet_dst_pardirs, nnunet_images_train_pardirs, nnunet_labels_train_pardirs
     
 
 
@@ -146,13 +146,13 @@ def setup_fedsim_data(postopp_pardir, first_three_digit_task_num, task_name, tim
     num_institutions(int)          : Number of simulated institutions to shard the data into.
 
     Returns:
-    task_folder_info                : Zipped lists indexed over tasks (collaborators)
-                                      zip(task_nums, tasks, nnunet_dst_pardirs, nnunet_images_train_pardirs, nnunet_labels_train_pardirs) 
+    task_nums, tasks, nnunet_dst_pardirs, nnunet_images_train_pardirs, nnunet_labels_train_pardirs 
     """
 
-    task_folder_info = create_task_folders(first_three_digit_task_num=first_three_digit_task_num, 
-                                           num_institutions=num_institutions, 
-                                           task_name=task_name)
+    task_nums, tasks, nnunet_dst_pardirs, nnunet_images_train_pardirs, nnunet_labels_train_pardirs = \
+        create_task_folders(first_three_digit_task_num=first_three_digit_task_num, 
+                            num_institutions=num_institutions, 
+                            task_name=task_name)
     
     postopp_subdirs = list(os.listdir(postopp_pardir))
     if 'data' not in postopp_subdirs:
@@ -166,9 +166,8 @@ def setup_fedsim_data(postopp_pardir, first_three_digit_task_num, task_name, tim
     all_subjects = list(os.listdir(postopp_data_dirpath))
     subject_shards = [all_subjects[start::num_institutions] for start in range(num_institutions)]
     
-    for shard_idx, postopp_subject_dirs in enumerate(subject_shards):
+    for shard_idx, (postopp_subject_dirs, task_num, task, nnunet_dst_pardir, nnunet_images_train_pardir, nnunet_labels_train_pardir) in enumerate(zip(subject_shards, task_nums, tasks, nnunet_dst_pardirs, nnunet_images_train_pardirs, nnunet_labels_train_pardirs)):
         print(f"\n######### CREATING SYMLINKS TO POSTOPP DATA FOR COLLABORATOR {shard_idx} #########\n") 
-        task_num, task, nnunet_dst_pardir, nnunet_images_train_pardir, nnunet_labels_train_pardir = task_folder_info[shard_idx]
         for postopp_subject_dir in postopp_subject_dirs:
             symlink_one_subject(postopp_subject_dir=postopp_subject_dir, 
                                 postopp_data_dirpath=postopp_data_dirpath, 
@@ -189,4 +188,4 @@ def setup_fedsim_data(postopp_pardir, first_three_digit_task_num, task_name, tim
         print(f"\n######### OS CALL TO PREPROCESS DATA FOR COLLABORATOR {shard_idx} #########\n")
         subprocess.run(["nnUNet_plan_and_preprocess",  "-t",  f"{task_num}", "--verify_dataset_integrity"])
 
-    return task_folder_info
+    return task_nums, tasks, nnunet_dst_pardirs, nnunet_images_train_pardirs, nnunet_labels_train_pardirs

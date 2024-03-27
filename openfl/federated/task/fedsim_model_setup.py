@@ -66,5 +66,5 @@ def normalize_architecture(reference_plan_path, target_plan_path):
     # write back to target plan
     write_pickled_obj(obj=target_plan, path=target_plan_path) 
 
-def setup_fedsim_models():
+def setup_fedsim_models(task_folder_info, network, network_trainer, tasks, plans_identifier, fold):
     

@@ -2,6 +2,7 @@ import os
 import pickle as pkl
 import shutil
 
+
 def model_folder(network, task, network_trainer, plans_identifier, fold, results_folder=os.environ['RESULTS_FOLDER']):
     return os.path.join(results_folder, 'nnUNet',network, task, network_trainer + '__' + plans_identifier, f'fold_{fold}')
 
@@ -9,6 +10,7 @@ def model_folder(network, task, network_trainer, plans_identifier, fold, results
 def model_paths_from_folder(model_folder):
     return {'model_path': os.path.join(model_folder, 'model_final_checkpoint.model'), 
             'model_info_path': os.path.join(model_folder, 'model_final_checkpoint.model.pkl')}
+
 
 def plan_path(network, task, plans_identifier):
     preprocessed_path = os.environ['nnUNet_preprocessed']
@@ -19,7 +21,6 @@ def plan_path(network, task, plans_identifier):
         plan_path = os.path.join(plan_dirpath, plans_identifier + "_plans_3D.pkl")
 
     return plan_path
-
 
 
 def normalize_architecture(reference_plan_path, target_plan_path):
@@ -65,6 +66,7 @@ def normalize_architecture(reference_plan_path, target_plan_path):
 
     # write back to target plan
     write_pickled_obj(obj=target_plan, path=target_plan_path) 
+
 
 def setup_fedsim_models(tasks, network, network_trainer, plans_identifier, fold, init_model_path, init_model_info_path):
 

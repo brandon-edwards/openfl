@@ -10,6 +10,7 @@ num_to_modality = {'_0000': '_brain_t1n.nii.gz',
                    '_0002': '_brain_t1c.nii.gz',
                    '_0003': '_brain_t2f.nii.gz'}
 
+
 def subject_time_to_mask_path(pardir, subject, timestamp):
     mask_fname = f'{subject}_{timestamp}_tumorMask_model_0.nii.gz'
     return os.path.join(pardir, 'labels', '.tumor_segmentation_backup', subject, timestamp,'TumorMasksForQC', mask_fname)
@@ -49,7 +50,6 @@ def create_task_folders(first_three_digit_task_num, num_institutions, task_name)
 
     return task_nums, tasks, nnunet_dst_pardirs, nnunet_images_train_pardirs, nnunet_labels_train_pardirs
     
-
 
 def symlink_one_subject(postopp_subject_dir, postopp_data_dirpath, postopp_labels_dirpath, nnunet_images_train_pardir, nnunet_labels_train_pardir, timestamp_selection):
     postopp_subject_dirpath = os.path.join(postopp_data_dirpath, postopp_subject_dir)
@@ -188,4 +188,4 @@ def setup_fedsim_data(postopp_pardir, first_three_digit_task_num, task_name, tim
         print(f"\n######### OS CALL TO PREPROCESS DATA FOR COLLABORATOR {shard_idx} #########\n")
         subprocess.run(["nnUNet_plan_and_preprocess",  "-t",  f"{task_num}", "--verify_dataset_integrity"])
 
-    return task_nums, tasks, nnunet_dst_pardirs, nnunet_images_train_pardirs, nnunet_labels_train_pardirs
+    return tasks

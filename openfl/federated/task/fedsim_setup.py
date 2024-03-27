@@ -1,13 +1,11 @@
-import os
 import argparse
-import pickle as pkl
 
 from nnunet.paths import default_plans_identifier
 
 from fedsim_data_setup import setup_fedsim_data
+from fedsim_model_setup import setup_fedsim_models
 
-
-def main(postopp_pardir, first_three_digit_task_num, task_name, network, network_trainer, fold, timestamp_selection='latest', num_institutions=1):
+def main(postopp_pardir, first_three_digit_task_num, init_model_path, init_model_info_path, task_name, network, network_trainer, fold, plans_identifier=default_plans_identifier, timestamp_selection='latest', num_institutions=1):
     """
     Generates symlinks to be used for NNUnet training, assuming we already have a 
     dataset on file coming from MLCommons RANO experiment data prep.
@@ -66,11 +64,18 @@ def main(postopp_pardir, first_three_digit_task_num, task_name, network, network
                                     │           └── AAAC_extra_2008.12.10_final_seg.nii.gz
                                     └── report.yaml
 
-    first_three_digit_task_num(str): Should start with '5'. If fedsim == N, all N task numbers starting with this number will be used.
-    task_name(str)                 : Any string task name.
-    timestamps(str)                : Indicates how to determine the timestamp to pick
-                                   for each subject ID at the source: 'latest' and 'earliest' are the only ones supported so far
-    num_institutions(int)                    : Number of simulated institutions to shard the data into.
+    first_three_digit_task_num(str) : Should start with '5'. If fedsim == N, all N task numbers starting with this number will be used.
+    init_model_path (str)           : path to initial (pretrained) model file
+    init_model_info_path(str)       : path to initial (pretrained) model info pikle file 
+    task_name(str)                  : Name of task that is part of the task name
+    network(str)                    : NNUnet network to be used
+    network_trainer(str)            : NNUnet network trainer to be used
+    fold(str)                       : Fold to train on, can be a sting indicating an int, or can be 'all'
+    plans_identifier(str)           : Used in the plans file naming.
+    task_name(str)                  : Any string task name.
+    timestamps(str)                 : Indicates how to determine the timestamp to pick
+                                      for each subject ID at the source: 'latest' and 'earliest' are the only ones supported so far
+    num_institutions(int)           : Number of simulated institutions to shard the data into.
     """
 
     # some argument inspection
@@ -82,23 +87,19 @@ def main(postopp_pardir, first_three_digit_task_num, task_name, network, network
     
     # task_folder_info is a zipped lists indexed over tasks (collaborators)
     #                  zip(task_nums, tasks, nnunet_dst_pardirs, nnunet_images_train_pardirs, nnunet_labels_train_pardirs)
-    task_nums, tasks, nnunet_dst_pardirs, nnunet_images_train_pardirs, nnunet_labels_train_pardirs = \
-        setup_fedsim_data(postopp_pardir=postopp_pardir, 
-                          first_three_digit_task_num=first_three_digit_task_num, 
-                          task_name=task_name, 
-                          timestamp_selection=timestamp_selection, 
-                          num_institutions=num_institutions)
+    tasks= setup_fedsim_data(postopp_pardir=postopp_pardir, 
+                             first_three_digit_task_num=first_three_digit_task_num, 
+                             task_name=task_name, 
+                             timestamp_selection=timestamp_selection, 
+                             num_institutions=num_institutions)
     
     setup_fedsim_models(tasks=tasks, 
                         network=network, 
                         network_trainer=network_trainer, 
                         plans_identifier=plans_identifier, 
-                        fold=fold)
-
-        
-
-
- 
+                        fold=fold, 
+                        init_model_path=init_model_path, 
+                        init_model_info_path=init_model_info_path)
 
 if __name__ == '__main__':
 
@@ -112,11 +113,40 @@ if __name__ == '__main__':
             type=int,
             help="Should start with '5'. If fedsim == N, all N task numbers starting with this number will be used.")
         argparser.add_argument(
+            '--init_model_path',
+            type=str,
+            help="Path to initial (pretrained) model file.")
+        argparser.add_argument(
+            '--init_model_info_path',
+            type=str,
+            help="Path to initial (pretrained) model info file.")
+        argparser.add_argument(
             '--task_name',
             type=str,
             help="NNUnet data task directory customizing 'XXX' and 'MYTASK' but otherwise: .../nnUNet_raw_data_base/nnUNet_raw_data/TaskXXX_MYTASK.")
         argparser.add_argument(
-            '--fedsim',
+            '--network',
+            type=str,
+            help="NNUnet network to be used.")
+        argparser.add_argument(
+            '--network_trainer',
+            type=str,
+            help="NNUnet network trainer to be used.")
+        argparser.add_argument(
+            '--fold',
+            type=str,
+            help="Fold to train on, can be a sting indicating an int, or can be 'all'.")
+        argparser.add_argument(
+            '--task_name',
+            type=str,
+            help="Any string task name.")
+        argparser.add_argument(
+            '--timestamps',
+            type=str,
+            default='latest',
+            help="Indicates how to determine the timestamp to pick for each subject ID at the source: 'latest' and 'earliest' are the only ones supported so far.")        
+        argparser.add_argument(
+            '--num_institutions',
             type=int,
             default=1,
             help="Number of symulated insitutions to shard the data into.")     

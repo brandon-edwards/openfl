@@ -73,7 +73,7 @@ def main(postopp_pardir, first_three_digit_task_num, init_model_path, init_model
     fold(str)                       : Fold to train on, can be a sting indicating an int, or can be 'all'
     plans_identifier(str)           : Used in the plans file naming.
     task_name(str)                  : Any string task name.
-    timestamps(str)                 : Indicates how to determine the timestamp to pick
+    timestamp_selection(str)        : Indicates how to determine the timestamp to pick, only 'earliest' and 'latest' are supported.
                                       for each subject ID at the source: 'latest' and 'earliest' are the only ones supported so far
     num_institutions(int)           : Number of simulated institutions to shard the data into.
     """
@@ -123,25 +123,24 @@ if __name__ == '__main__':
         argparser.add_argument(
             '--task_name',
             type=str,
-            help="NNUnet data task directory customizing 'XXX' and 'MYTASK' but otherwise: .../nnUNet_raw_data_base/nnUNet_raw_data/TaskXXX_MYTASK.")
+            help="Part of the NNUnet data task directory name. With 'first_three_digit_task_num being 'XXX', the directory name becomes: .../nnUNet_raw_data_base/nnUNet_raw_data/TaskXXX_<task_name>.")
         argparser.add_argument(
             '--network',
             type=str,
+            default='3d_fullres',
             help="NNUnet network to be used.")
         argparser.add_argument(
             '--network_trainer',
             type=str,
+            default='nnUNetTrainerV2',
             help="NNUnet network trainer to be used.")
         argparser.add_argument(
             '--fold',
             type=str,
+            default='0',
             help="Fold to train on, can be a sting indicating an int, or can be 'all'.")
         argparser.add_argument(
-            '--task_name',
-            type=str,
-            help="Any string task name.")
-        argparser.add_argument(
-            '--timestamps',
+            '--timestamp_selection',
             type=str,
             default='latest',
             help="Indicates how to determine the timestamp to pick for each subject ID at the source: 'latest' and 'earliest' are the only ones supported so far.")        

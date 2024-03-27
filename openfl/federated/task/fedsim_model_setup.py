@@ -84,16 +84,18 @@ def setup_fedsim_models(tasks, network, network_trainer, plans_identifier, fold,
     col_0_model_files_dict = model_paths_from_folder(model_folder=model_folder(network=network, 
                                                                                task=col_0_task, 
                                                                                network_trainer=network_trainer, 
-                                                                               pals_indentidier=plans_identifier, 
+                                                                               plans_identifier=plans_identifier, 
                                                                                fold=fold))
     
+    print(f"\n######### COPYING INITIAL MODEL FILES INTO COLLABORATOR 0 FOLDERS #########\n")
     # Copy initial model and model info into col_0_model_folder
     shutil.copyfile(src=init_model_path,dst=col_0_model_files_dict['model_path'])
     shutil.copyfile(src=init_model_info_path,dst=col_0_model_files_dict['model_info_path'])
 
     # now create the model folders for collaborators 1 and upward, populate them with the model files from 0, 
     # and replace their data directory plan files from the col_0 plan 
-    for task in tasks[1:]:
+    for col_idx_minus_one, task in enumerate(tasks[1:]):
+        print(f"\n######### COPYING MODEL INFO FROM COLLABORATOR 0 TO COLLABORATOR {col_idx_minus_one + 1} #########\n")
         # replace data directory plan file with one from col_0
         target_plan_path = plan_path(network=network, task=task, plans_identifier=plans_identifier)
         normalize_architecture(reference_plan_path=col_0_plan_path, target_plan_path=target_plan_path)
@@ -110,7 +112,7 @@ def setup_fedsim_models(tasks, network, network_trainer, plans_identifier, fold,
         this_col_model_files_dict = model_paths_from_folder(model_folder=model_folder(network=network, 
                                                                                       task=task, 
                                                                                       network_trainer=network_trainer, 
-                                                                                      pals_indentidier=plans_identifier, 
+                                                                                      plans_identifier=plans_identifier, 
                                                                                       fold=fold))
         # Copy initial model and model info into this_col_model_folder
         shutil.copyfile(src=col_0_model_files_dict['model_path'],dst=this_col_model_files_dict['model_path'])

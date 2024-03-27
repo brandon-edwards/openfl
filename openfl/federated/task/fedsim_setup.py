@@ -89,40 +89,15 @@ def main(postopp_pardir, first_three_digit_task_num, task_name, network, network
                           timestamp_selection=timestamp_selection, 
                           num_institutions=num_institutions)
     
-    setup_fedsim_models(network=network, 
+    setup_fedsim_models(tasks=tasks, 
+                        network=network, 
                         network_trainer=network_trainer, 
-                        tasks=tasks, 
                         plans_identifier=plans_identifier, 
                         fold=fold)
 
         
 
-        ####   ######   ####
 
-    # normalize the architecture using info from the first collaborators
-    _, col_0_task, _, _, _ = task_folder_info[0]
-    col_0_plan_path = plan_path(network=network, task=col_0_task, plans_identifier=default_plans_identifier)
-
-    col_0_model_folder = model_folder(network=network, 
-                                      task=col_0_task, 
-                                      network_trainer=network_trainer, 
-                                      plans_identifier=default_plans_identifier, 
-                                      fold=fold)
-    os.makedirs(col_0_model_folder, exist_ok=False)
-    WORKING HERE
-    # TODO: Here is where we grab the model files from an outside reference spot
-    
-    model_paths_from_folder(model_folder=model_folder(network, task, network_trainer, plans_identifier, fold))
-    return os.path.join(results_folder, 'nnUNet',network, task, network_trainer + '__' + plans_identifier, f'fold_{fold}')
-
-
-
-    for _, task, _, _, _ in task_folder_info[1:]:
-        target_plan_path = plan_path(network=network, task=task, plans_identifier=default_plans_identifier)
-        normalize_architecture(reference_plan_path=col_0_plan_path, target_plan_path=target_plan_path)
-
-    # create the model folders for all collaborators, filling in with model files from collaborator one
-    
  
 
 if __name__ == '__main__':

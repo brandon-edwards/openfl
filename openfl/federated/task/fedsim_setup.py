@@ -65,8 +65,10 @@ def main(postopp_pardir, first_three_digit_task_num, init_model_path, init_model
                                     └── report.yaml
 
     first_three_digit_task_num(str) : Should start with '5'. If fedsim == N, all N task numbers starting with this number will be used.
-    init_model_path (str)           : path to initial (pretrained) model file [default None] - must be provided if init_model_info_path is
-    init_model_info_path(str)       : path to initial (pretrained) model info pikle file [default None]- must be provided if init_model_path is
+    init_model_path (str)           : path to initial (pretrained) model file [default None] - must be provided if init_model_info_path is.
+                                      [ONLY USE IF YOU KNOW THE MODEL ARCHITECTURE MAKES SENSE FOR THE FEDERATION. OTHERWISE ARCHITECTURE IS CHOSEN USING COLLABORATOR 0 DATA.]
+    init_model_info_path(str)       : path to initial (pretrained) model info pikle file [default None]- must be provided if init_model_path is.
+                                      [ONLY USE IF YOU KNOW THE MODEL ARCHITECTURE MAKES SENSE FOR THE FEDERATION. OTHERWISE ARCHITECTURE IS CHOSEN USING COLLABORATOR 0 DATA.]
     task_name(str)                  : Name of task that is part of the task name
     network(str)                    : NNUnet network to be used
     network_trainer(str)            : NNUnet network trainer to be used
@@ -122,12 +124,12 @@ if __name__ == '__main__':
             '--init_model_path',
             type=str,
             default=None,
-            help="Path to initial (pretrained) model file.")
+            help="Path to initial (pretrained) model file [ONLY USE IF YOU KNOW THE MODEL ARCHITECTURE MAKES SENSE FOR THE FEDERATION. OTHERWISE ARCHITECTURE IS CHOSEN USING COLLABORATOR 0's DATA.].")
         argparser.add_argument(
             '--init_model_info_path',
             type=str,
             default=None,
-            help="Path to initial (pretrained) model info file.")
+            help="Path to initial (pretrained) model info file [ONLY USE IF YOU KNOW THE MODEL ARCHITECTURE MAKES SENSE FOR THE FEDERATION. OTHERWISE ARCHITECTURE IS CHOSEN USING COLLABORATOR 0's DATA.].")
         argparser.add_argument(
             '--task_name',
             type=str,

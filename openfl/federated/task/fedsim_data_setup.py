@@ -188,7 +188,4 @@ def setup_fedsim_data(postopp_pardir, first_three_digit_task_num, task_name, tim
         print(f"\n######### OS CALL TO PREPROCESS DATA FOR COLLABORATOR {shard_idx} #########\n")
         subprocess.run(["nnUNet_plan_and_preprocess",  "-t",  f"{task_num}", "--verify_dataset_integrity"])
 
-        # We do not need the 2d data and so will be removing it to save space on disk (NNUnet data path again from an environment)
-        nnunet_2d_data_pardir = os.path.join(os.environ['nnUNet_raw_data_base'], 'nnUNet_preprocessed', f'{task}')
-
     return tasks

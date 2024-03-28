@@ -3,9 +3,9 @@ import argparse
 from nnunet.paths import default_plans_identifier
 
 from fedsim_data_setup import setup_fedsim_data
-from fedsim_model_setup import setup_fedsim_models
+from fedsim_model_setup import trim_data_and_setup_fedsim_models
 
-def main(postopp_pardir, first_three_digit_task_num, init_model_path, init_model_info_path, task_name, network, network_trainer, fold, plans_identifier=default_plans_identifier, timestamp_selection='latest', num_institutions=1):
+def main(postopp_pardir, first_three_digit_task_num, init_model_path, init_model_info_path, task_name, network, network_trainer, fold, plans_identifier=default_plans_identifier, timestamp_selection='latest', num_institutions=1, cuda_device='0'):
     """
     Generates symlinks to be used for NNUnet training, assuming we already have a 
     dataset on file coming from MLCommons RANO experiment data prep.
@@ -65,8 +65,8 @@ def main(postopp_pardir, first_three_digit_task_num, init_model_path, init_model
                                     └── report.yaml
 
     first_three_digit_task_num(str) : Should start with '5'. If fedsim == N, all N task numbers starting with this number will be used.
-    init_model_path (str)           : path to initial (pretrained) model file
-    init_model_info_path(str)       : path to initial (pretrained) model info pikle file 
+    init_model_path (str)           : path to initial (pretrained) model file [default None] - must be provided if init_model_info_path is
+    init_model_info_path(str)       : path to initial (pretrained) model info pikle file [default None]- must be provided if init_model_path is
     task_name(str)                  : Name of task that is part of the task name
     network(str)                    : NNUnet network to be used
     network_trainer(str)            : NNUnet network trainer to be used
@@ -84,7 +84,12 @@ def main(postopp_pardir, first_three_digit_task_num, init_model_path, init_model
          raise ValueError(f'The number of digits in {first_three_digit_task_num} should be 3, but it is: {task_digit_length} instead.')
     if str(first_three_digit_task_num)[0] != '5':
          raise ValueError(f"The three digit task number: {first_three_digit_task_num} should start with 5 to avoid NNUnet repository tasks, but it starts with {first_three_digit_task_num[0]}")    
-    
+    if init_model_path or init_model_info_path:
+          if not init_model_path or not init_model_info_path:
+                raise ValueError(f"If either init_model_path or init_model_info_path are provided, they both must be.")
+          
+
+
     # task_folder_info is a zipped lists indexed over tasks (collaborators)
     #                  zip(task_nums, tasks, nnunet_dst_pardirs, nnunet_images_train_pardirs, nnunet_labels_train_pardirs)
     tasks= setup_fedsim_data(postopp_pardir=postopp_pardir, 
@@ -92,14 +97,15 @@ def main(postopp_pardir, first_three_digit_task_num, init_model_path, init_model
                              task_name=task_name, 
                              timestamp_selection=timestamp_selection, 
                              num_institutions=num_institutions)
-    
-    setup_fedsim_models(tasks=tasks, 
-                        network=network, 
-                        network_trainer=network_trainer, 
-                        plans_identifier=plans_identifier, 
-                        fold=fold, 
-                        init_model_path=init_model_path, 
-                        init_model_info_path=init_model_info_path)
+    # trim 2d data if not working with 2d model, and distribute common model architecture across simulated collaborators
+    trim_data_and_setup_fedsim_models(tasks=tasks, 
+                                      network=network, 
+                                      network_trainer=network_trainer, 
+                                      plans_identifier=plans_identifier, 
+                                      fold=fold, 
+                                      init_model_path=init_model_path, 
+                                      init_model_info_path=init_model_info_path, 
+                                      cuda_device=cuda_device)
 
 if __name__ == '__main__':
 
@@ -115,10 +121,12 @@ if __name__ == '__main__':
         argparser.add_argument(
             '--init_model_path',
             type=str,
+            default=None,
             help="Path to initial (pretrained) model file.")
         argparser.add_argument(
             '--init_model_info_path',
             type=str,
+            default=None,
             help="Path to initial (pretrained) model info file.")
         argparser.add_argument(
             '--task_name',
@@ -148,7 +156,12 @@ if __name__ == '__main__':
             '--num_institutions',
             type=int,
             default=1,
-            help="Number of symulated insitutions to shard the data into.")     
+            help="Number of symulated insitutions to shard the data into.")
+        argparser.add_argument(
+            '--cuda_device',
+            type=str,
+            default='0',
+            help="Used for the setting of os.environ['CUDA_VISIBLE_DEVICES']")     
 
         args = argparser.parse_args()
 

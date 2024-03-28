@@ -2,6 +2,20 @@ import os
 import pickle as pkl
 import shutil
 
+from nnunet_v1 import train_nnunet
+
+
+def train_on_task(task, network, network_trainer, fold, cuda_device, continue_training=False, current_epoch=0):
+    os.environ['CUDA_VISIBLE_DEVICES']=cuda_device
+    print(f"###########\nStarting training for task: {task}\n")
+    train_nnunet(epochs=1, 
+                 current_epoch = current_epoch, 
+                 network = network,
+                 task=task, 
+                 network_trainer = network_trainer, 
+                 fold=fold, 
+                 continue_training=continue_training)
+
 
 def model_folder(network, task, network_trainer, plans_identifier, fold, results_folder=os.environ['RESULTS_FOLDER']):
     return os.path.join(results_folder, 'nnUNet',network, task, network_trainer + '__' + plans_identifier, f'fold_{fold}')
@@ -15,12 +29,30 @@ def model_paths_from_folder(model_folder):
 def plan_path(network, task, plans_identifier):
     preprocessed_path = os.environ['nnUNet_preprocessed']
     plan_dirpath = os.path.join(preprocessed_path, task)
+    plan_path_2d = os.path.join(plan_dirpath, plans_identifier + "_plans_2D.pkl")
+    plan_path_3d = os.path.join(plan_dirpath, plans_identifier + "_plans_3D.pkl")
+
     if network =='2d':
-        plan_path = os.path.join(plan_dirpath, plans_identifier + "_plans_2D.pkl")
+        plan_path = plan_path_2d
     else:
-        plan_path = os.path.join(plan_dirpath, plans_identifier + "_plans_3D.pkl")
+        plan_path = plan_path_3d
 
     return plan_path
+
+def delete_2d_data(network, task, plans_identifier):
+    if network == '2d':
+        raise ValueError(f"2D data should not be deleted when performing 2d training.")
+    else:
+        preprocessed_path = os.environ['nnUNet_preprocessed']
+        plan_dirpath = os.path.join(preprocessed_path, task)
+        plan_path_2d = os.path.join(plan_dirpath, plans_identifier + "_plans_2D.pkl")
+
+        # load 2d plan to help construct 2D data directory
+        with open(plan_path_2d, 'rb') as _file:
+            plan_2d = pkl.load(_file)
+        data_dir_2d = os.path.join(plan_dirpath, plan_2d['data_identifier'] + '_stage' + str(list(plan_2d['plans_per_stage'].keys())[-1]))
+        print(f"\n###########\nDeleting 2D data directory at: {data_dir_2d} \n##############\n")
+        shutil.rmtree(data_dir_2d)
 
 
 def normalize_architecture(reference_plan_path, target_plan_path):
@@ -68,10 +100,13 @@ def normalize_architecture(reference_plan_path, target_plan_path):
     write_pickled_obj(obj=target_plan, path=target_plan_path) 
 
 
-def setup_fedsim_models(tasks, network, network_trainer, plans_identifier, fold, init_model_path, init_model_info_path):
+def trim_data_and_setup_fedsim_models(tasks, network, network_trainer, plans_identifier, fold, init_model_path, init_model_info_path, cuda_device='0'):
 
-    # get the architecture info from the first collaborator data setup results and create its model folder, writing the initial model info into it
     col_0_task = tasks[0]
+    # trim collaborator 0 data if appropriate
+    if network != '2d':
+        delete_2d_data(network=network, task=col_0_task, plans_identifier=plans_identifier)
+    # get the architecture info from the first collaborator 0 data setup results, and create its model folder (writing the initial model info into it)
     col_0_plan_path = plan_path(network=network, task=col_0_task, plans_identifier=plans_identifier)
 
     col_0_model_folder = model_folder(network=network, 
@@ -86,15 +121,22 @@ def setup_fedsim_models(tasks, network, network_trainer, plans_identifier, fold,
                                                                                network_trainer=network_trainer, 
                                                                                plans_identifier=plans_identifier, 
                                                                                fold=fold))
-    
-    print(f"\n######### COPYING INITIAL MODEL FILES INTO COLLABORATOR 0 FOLDERS #########\n")
-    # Copy initial model and model info into col_0_model_folder
-    shutil.copyfile(src=init_model_path,dst=col_0_model_files_dict['model_path'])
-    shutil.copyfile(src=init_model_info_path,dst=col_0_model_files_dict['model_info_path'])
+    if not init_model_path:
+        # train collaborator 0 for a single epoch to get an initial model
+        train_on_task(task=col_0_task, network=network, network_trainer=network_trainer, fold=fold, cuda_device=cuda_device)
+    else:
+        print(f"\n######### COPYING INITIAL MODEL FILES INTO COLLABORATOR 0 FOLDERS #########\n")
+        # Copy initial model and model info into col_0_model_folder
+        shutil.copyfile(src=init_model_path,dst=col_0_model_files_dict['model_path'])
+        shutil.copyfile(src=init_model_info_path,dst=col_0_model_files_dict['model_info_path'])
 
     # now create the model folders for collaborators 1 and upward, populate them with the model files from 0, 
     # and replace their data directory plan files from the col_0 plan 
     for col_idx_minus_one, task in enumerate(tasks[1:]):
+        # trim collaborator data if appropriate
+        if network != '2d':
+            delete_2d_data(network=network, task=task, plans_identifier=plans_identifier)
+
         print(f"\n######### COPYING MODEL INFO FROM COLLABORATOR 0 TO COLLABORATOR {col_idx_minus_one + 1} #########\n")
         # replace data directory plan file with one from col_0
         target_plan_path = plan_path(network=network, task=task, plans_identifier=plans_identifier)

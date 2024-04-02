@@ -22,8 +22,10 @@ def model_folder(network, task, network_trainer, plans_identifier, fold, results
 
 
 def model_paths_from_folder(model_folder):
-    return {'model_path': os.path.join(model_folder, 'model_final_checkpoint.model'), 
-            'model_info_path': os.path.join(model_folder, 'model_final_checkpoint.model.pkl')}
+    return {'initial_model_path': os.path.join(model_folder, 'model_initial_checkpoint.model'), 
+            'final_model_path': os.path.join(model_folder, 'model_final_checkpoint.model'),
+            'initial_model_info_path': os.path.join(model_folder, 'model_initial_checkpoint.model.pkl'), 
+            'final_model_info_path': os.path.join(model_folder, 'model_final_checkpoint.model.pkl')}
 
 
 def plan_path(network, task, plans_identifier):
@@ -124,11 +126,17 @@ def trim_data_and_setup_fedsim_models(tasks, network, network_trainer, plans_ide
     if not init_model_path:
         # train collaborator 0 for a single epoch to get an initial model
         train_on_task(task=col_0_task, network=network, network_trainer=network_trainer, fold=fold, cuda_device=cuda_device)
+        # now copy the final model and info from the initial training run into the initial paths
+        shutil.copyfile(src=col_0_model_files_dict['final_model_path'],dst=col_0_model_files_dict['initial_model_path'])
+        shutil.copyfile(src=col_0_model_files_dict['final_model_info_path'],dst=col_0_model_files_dict['initial_model_info_path'])
     else:
         print(f"\n######### COPYING INITIAL MODEL FILES INTO COLLABORATOR 0 FOLDERS #########\n")
         # Copy initial model and model info into col_0_model_folder
-        shutil.copyfile(src=init_model_path,dst=col_0_model_files_dict['model_path'])
-        shutil.copyfile(src=init_model_info_path,dst=col_0_model_files_dict['model_info_path'])
+        shutil.copyfile(src=init_model_path,dst=col_0_model_files_dict['initial_model_path'])
+        shutil.copyfile(src=init_model_info_path,dst=col_0_model_files_dict['initial_model_info_path'])
+        # now copy the initial model also into the final paths
+        shutil.copyfile(src=col_0_model_files_dict['initial_model_path'],dst=col_0_model_files_dict['final_model_path'])
+        shutil.copyfile(src=col_0_model_files_dict['initial_model_info_path'],dst=col_0_model_files_dict['final_model_info_path'])
 
     # now create the model folders for collaborators 1 and upward, populate them with the model files from 0, 
     # and replace their data directory plan files from the col_0 plan 
@@ -156,7 +164,9 @@ def trim_data_and_setup_fedsim_models(tasks, network, network_trainer, plans_ide
                                                                                       network_trainer=network_trainer, 
                                                                                       plans_identifier=plans_identifier, 
                                                                                       fold=fold))
-        # Copy initial model and model info into this_col_model_folder
-        shutil.copyfile(src=col_0_model_files_dict['model_path'],dst=this_col_model_files_dict['model_path'])
-        shutil.copyfile(src=col_0_model_files_dict['model_info_path'],dst=this_col_model_files_dict['model_info_path'])
+        # Copy initial and final model and model info from col_0 into this_col_model_folder
+        shutil.copyfile(src=col_0_model_files_dict['initial_model_path'],dst=this_col_model_files_dict['initial_model_path'])
+        shutil.copyfile(src=col_0_model_files_dict['final_model_path'],dst=this_col_model_files_dict['final_model_path'])
+        shutil.copyfile(src=col_0_model_files_dict['initial_model_info_path'],dst=this_col_model_files_dict['initial_model_info_path'])
+        shutil.copyfile(src=col_0_model_files_dict['final_model_info_path'],dst=this_col_model_files_dict['final_model_info_path'])
     

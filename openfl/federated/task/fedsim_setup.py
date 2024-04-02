@@ -89,6 +89,11 @@ def main(postopp_pardir, first_three_digit_task_num, init_model_path, init_model
     if init_model_path or init_model_info_path:
           if not init_model_path or not init_model_info_path:
                 raise ValueError(f"If either init_model_path or init_model_info_path are provided, they both must be.")
+    if init_model_path:
+          if not init_model_path.endswith('.model'):
+                raise ValueError(f"Initial model file should end with, '.model'")
+          if not init_model_info_path.endswith('.model.pkl'):
+                raise ValueError(f"Initial model info file should end with, 'model.pkl'")
           
 
 

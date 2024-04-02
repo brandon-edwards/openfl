@@ -245,31 +245,32 @@ def train_nnunet(epochs,
 
             trainer.run_training()
         else:
-            if valbest:
-                trainer.load_best_checkpoint(train=False)
-            else:
-                trainer.load_final_checkpoint(train=False)
+            # if valbest:
+            #     trainer.load_best_checkpoint(train=False)
+            # else:
+            #     trainer.load_final_checkpoint(train=False)
+            trainer.load_latest_checkpoint()
 
         trainer.network.eval()
 
-        if fold == "all":
-            print("--> fold == 'all'")
-            print("--> DONE")
-        else:
-            # predict validation
-            trainer.validate(
-                save_softmax=args.npz,
-                validation_folder_name=val_folder,
-                run_postprocessing_on_folds=not disable_postprocessing_on_folds,
-                overwrite=args.val_disable_overwrite,
-            )
+        # if fold == "all":
+        #     print("--> fold == 'all'")
+        #     print("--> DONE")
+        # else:
+        #     # predict validation
+        #     trainer.validate(
+        #         save_softmax=args.npz,
+        #         validation_folder_name=val_folder,
+        #         run_postprocessing_on_folds=not disable_postprocessing_on_folds,
+        #         overwrite=args.val_disable_overwrite,
+        #     )
 
-            if network == "3d_lowres" and not args.disable_next_stage_pred:
-                print("predicting segmentations for the next stage of the cascade")
-                predict_next_stage(
-                    trainer,
-                    join(
-                        dataset_directory,
-                        trainer.plans["data_identifier"] + "_stage%d" % 1,
-                    ),
-                )
+        #     if network == "3d_lowres" and not args.disable_next_stage_pred:
+        #         print("predicting segmentations for the next stage of the cascade")
+        #         predict_next_stage(
+        #             trainer,
+        #             join(
+        #                 dataset_directory,
+        #                 trainer.plans["data_identifier"] + "_stage%d" % 1,
+        #             ),
+        #         )

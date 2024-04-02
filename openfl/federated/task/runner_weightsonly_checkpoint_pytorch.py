@@ -358,30 +358,6 @@ class WeightsOnlyPyTorchCheckpointTaskRunner(TaskRunner):
         # TODO: Figure out the right name to use for this method and the default assigner
         """Perform training for a specified number of epochs."""
 
-        # will have below, but for now implementing this to test a child class instance
-        # raise NotImplementedError()
-
-       
-
-        #         if 'metrics' not in kwargs:
-        #             raise KeyError('metrics must be included in kwargs')
-        #         param_metrics = kwargs['metrics']
-
-        # # FIXME: REMOVE HORRIBLENESS BELOW ONCE WE HAVE CONTAINERS
-        # base_model_path = os.path.join(os.environ['RESULTS_FOLDER'], 'nnUNet', '3d_fullres')
-        # base_model_path = os.path.join(base_model_path, self.data_loader.get_task_name(), 'nnUNetTrainerV2__nnUNetPlansv2.1', 'fold_0')
-        
-        # # THIS IS BROKEN UNTIL WE HAVE THIS WORKING WITH CONTAINERS
-        # self.checkpoint_out_path = os.path.join(base_model_path, 'model_final_checkpoint.model')
-        # self.checkpoint_in_path = os.path.join(base_model_path, 'model_final_checkpoint.model')
-        # self.checkpoint_init_path = os.path.join(base_model_path, 'model_initial_checkpoint.model')
-
-        # print("****************")
-        # print("set self.checkpoint_out_path to", self.checkpoint_out_path)
-        # print("set self.checkpoint_in_path to", self.checkpoint_in_path)
-        # print("set self.checkpoint_init_path to", self.checkpoint_init_path)
-        # # FIXME: REMOVE HORRIBLENESS ABOVE ONCE WE HAVE CONTAINERS
-        
         # get hashes before and after
         print("***** BEFORE HASH:", hashlib.md5(open(self.checkpoint_out_path,'rb').read()).hexdigest())
         self.rebuild_model(input_tensor_dict=input_tensor_dict, **kwargs)

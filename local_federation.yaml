@@ -1,0 +1,10 @@
+# Note: names need to be lower case :(
+cols: {
+  col1: 'Task588_FedSimTest',
+  # col1: 'Task555_FedSimTest',
+  # col2: 'Task556_FedSimTest',
+}
+template: fl_post
+# fed_workspace: local_fed_work_fl_post555
+fed_workspace: local_fed_work_fl_post588
+rounds_to_train: 20

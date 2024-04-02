@@ -13,6 +13,8 @@ import shutil
 import time
 import pickle as pkl
 from copy import deepcopy
+import hashlib
+import yaml
 
 import numpy as np
 import torch
@@ -35,6 +37,7 @@ class WeightsOnlyPyTorchCheckpointTaskRunner(TaskRunner):
        pull model state from a PyTorch checkpoint."""
 
     def __init__(self,
+                 nnunet_task=None,
                  checkpoint_out_path = None,
                  checkpoint_in_path = None,
                  checkpoint_init_path = None,
@@ -59,14 +62,39 @@ class WeightsOnlyPyTorchCheckpointTaskRunner(TaskRunner):
         # missmatch in size coming from the momentum buffer and other stuff either in the model or optimizer)
         self.opt_treatment = 'CONTINUE_LOCAL'
 
-        self.checkpoint_out_path = checkpoint_out_path
-        self.checkpoint_in_path = checkpoint_in_path
-        self.checkpoint_init_path = checkpoint_init_path
+        # Load local config file
+        if os.path.exists('nnunet_collaborator_config.yaml'):
+            with open('nnunet_collaborator_config.yaml', 'r') as f:
+                config = yaml.safe_load(f)
+            self.gpu_num_string = str(config['gpu_num_string'])
+            self.nnunet_task = config['nnunet_task']
+        else:
+            self.gpu_num_string = str(gpu_num_string)
+            self.nnunet_task = nnunet_task
+
+        # FIXME: Understand what of this needs to be configurable for NNUNet
+        base_model_path = os.path.join(os.environ['RESULTS_FOLDER'], 'nnUNet', '3d_fullres')
+        base_model_path = os.path.join(base_model_path, self.nnunet_task, 'nnUNetTrainerV2__nnUNetPlansv2.1', 'fold_0')
+        
+        # THIS IS BROKEN UNTIL WE HAVE THIS WORKING WITH CONTAINERS
+        if checkpoint_out_path is None:
+            self.checkpoint_out_path = os.path.join(base_model_path, 'model_final_checkpoint.model')
+        else:
+            self.checkpoint_out_path = checkpoint_out_path
+        
+        if checkpoint_in_path is None:
+            self.checkpoint_in_path = os.path.join(base_model_path, 'model_final_checkpoint.model')
+        else:
+            self.checkpoint_in_path = checkpoint_in_path
+        
+        if checkpoint_init_path is None:
+            self.checkpoint_init_path = os.path.join(base_model_path, 'model_initial_checkpoint.model')
+        else:
+            self.checkpoint_init_path = checkpoint_init_path
 
         if device not in ['cpu', 'cuda']:
             raise ValueError("Device argument must be 'cpu' or 'cuda', but {device} was used instead.")
         self.device = device
-        self.gpu_num_string = gpu_num_string
         self.config_path = config_path
 
         self.training_round_completed = False
@@ -119,6 +147,24 @@ class WeightsOnlyPyTorchCheckpointTaskRunner(TaskRunner):
     def initialize_tensorkeys_for_functions(self, **kwargs):
         initialize_tensorkeys_for_functions_util(runner_class=self, **kwargs)
      
+    def get_required_tensorkeys_for_function(self, func_name, **kwargs):
+        """
+        Get the required tensors for specified function that could be called \
+        as part of a task. By default, this is just all of the layers and \
+        optimizer of the model.
+
+        Args:
+            func_name
+
+        Returns:
+            list : [TensorKey]
+        """
+        if func_name == 'validate':
+            local_model = 'apply=' + str(kwargs['apply'])
+            return self.required_tensorkeys_for_function[func_name][local_model]
+        else:
+            return self.required_tensorkeys_for_function[func_name]
+
     def reset_opt_vars(self):
         current_checkpoint_dict = self.load_checkpoint()
         initial_checkpoint_dict = self.load_checkpoint(checkpoint_path=self.checkpoint_init_path)
@@ -321,14 +367,33 @@ class WeightsOnlyPyTorchCheckpointTaskRunner(TaskRunner):
         #             raise KeyError('metrics must be included in kwargs')
         #         param_metrics = kwargs['metrics']
 
+        # # FIXME: REMOVE HORRIBLENESS BELOW ONCE WE HAVE CONTAINERS
+        # base_model_path = os.path.join(os.environ['RESULTS_FOLDER'], 'nnUNet', '3d_fullres')
+        # base_model_path = os.path.join(base_model_path, self.data_loader.get_task_name(), 'nnUNetTrainerV2__nnUNetPlansv2.1', 'fold_0')
+        
+        # # THIS IS BROKEN UNTIL WE HAVE THIS WORKING WITH CONTAINERS
+        # self.checkpoint_out_path = os.path.join(base_model_path, 'model_final_checkpoint.model')
+        # self.checkpoint_in_path = os.path.join(base_model_path, 'model_final_checkpoint.model')
+        # self.checkpoint_init_path = os.path.join(base_model_path, 'model_initial_checkpoint.model')
+
+        # print("****************")
+        # print("set self.checkpoint_out_path to", self.checkpoint_out_path)
+        # print("set self.checkpoint_in_path to", self.checkpoint_in_path)
+        # print("set self.checkpoint_init_path to", self.checkpoint_init_path)
+        # # FIXME: REMOVE HORRIBLENESS ABOVE ONCE WE HAVE CONTAINERS
+        
+        # get hashes before and after
+        print("***** BEFORE HASH:", hashlib.md5(open(self.checkpoint_out_path,'rb').read()).hexdigest())
         self.rebuild_model(input_tensor_dict=input_tensor_dict, **kwargs)
         # 1. Insert tensor_dict info into checkpoint
         current_epoch = self.set_tensor_dict(tensor_dict=input_tensor_dict, with_opt_vars=False)
+        print("***** AFTER HASH:", hashlib.md5(open(self.checkpoint_out_path,'rb').read()).hexdigest())
+        print("***** CURRENT EPOCH FOR",self.checkpoint_out_path,"ARE",current_epoch,"*****")
         # 2. Train function existing externally
         # Some todo inside function below
         # TODO: test for off-by-one error
         # TODO: we need to disable validation if possible, and separately call validation  
-        train_nnunet(epochs=epochs, current_epoch=current_epoch)
+        train_nnunet(epochs=epochs, current_epoch=current_epoch, task=self.data_loader.get_task_name())
        
         """
         # This is actual code to use later that calls an external procedure

@@ -11,7 +11,7 @@ from openfl.utilities.split import split_tensor_dict_for_holdouts
 from openfl.utilities import TensorKey
 
 
-def rebuild_model_util(runner_class, input_tensor_dict, testing_with_opt_setting=False):
+def rebuild_model_util(runner_class, input_tensor_dict, testing_with_opt_setting=False, **kwargs):
         """
         Parse tensor names and update weights of model. Assumes opt_treatement == CONTINUE_LOCAL, but
         allows for writing in optimizer variables for testing purposes

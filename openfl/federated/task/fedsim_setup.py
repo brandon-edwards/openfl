@@ -5,7 +5,10 @@ from nnunet.paths import default_plans_identifier
 from fedsim_data_setup import setup_fedsim_data
 from fedsim_model_setup import trim_data_and_setup_fedsim_models
 
-def main(postopp_pardir, first_three_digit_task_num, init_model_path, init_model_info_path, task_name, network, network_trainer, fold, plans_identifier=default_plans_identifier, timestamp_selection='latest', num_institutions=1, cuda_device='0'):
+def list_of_strings(arg):
+    return arg.split(',')
+
+def main(postopp_pardirs, first_three_digit_task_num, init_model_path, init_model_info_path, task_name, network, network_trainer, fold, plans_identifier=default_plans_identifier, timestamp_selection='latest', num_institutions=1, cuda_device='0'):
     """
     Generates symlinks to be used for NNUnet training, assuming we already have a 
     dataset on file coming from MLCommons RANO experiment data prep.
@@ -15,8 +18,11 @@ def main(postopp_pardir, first_three_digit_task_num, init_model_path, init_model
     should be run using a virtual environment that has nnunet version 1 installed.
 
     args:
-    postopp_src_pardir(str)     : Parent directory for postopp data.  
-                                    Should have 'data' and 'labels' subdirectories with structure:
+    postopp_pardirs(list of str)     : Parent directories for postopp data. The length of the list should either be 
+                                   equal to num_insitutions, or one. If the length of the list is one and num_insitutions is not one,
+                                   the samples within that single directory will be used to create num_insititutions shards.
+                                   If the length of this list is equal to num_insitutions, the shards are defined by the samples within each string path.  
+                                   Either way, all string paths within this list should piont to folders that have 'data' and 'labels' subdirectories with structure:
                                     ├── data
                                     │   ├── AAAC_0
                                     │   │   ├── 2008.03.30
@@ -79,7 +85,7 @@ def main(postopp_pardir, first_three_digit_task_num, init_model_path, init_model
                                       for each subject ID at the source: 'latest' and 'earliest' are the only ones supported so far
     num_institutions(int)           : Number of simulated institutions to shard the data into.
     """
-
+    
     # some argument inspection
     task_digit_length = len(str(first_three_digit_task_num))
     if task_digit_length != 3:
@@ -99,7 +105,7 @@ def main(postopp_pardir, first_three_digit_task_num, init_model_path, init_model
 
     # task_folder_info is a zipped lists indexed over tasks (collaborators)
     #                  zip(task_nums, tasks, nnunet_dst_pardirs, nnunet_images_train_pardirs, nnunet_labels_train_pardirs)
-    tasks= setup_fedsim_data(postopp_pardir=postopp_pardir, 
+    tasks= setup_fedsim_data(postopp_pardirs=postopp_pardirs, 
                              first_three_digit_task_num=first_three_digit_task_num, 
                              task_name=task_name, 
                              timestamp_selection=timestamp_selection, 
@@ -118,9 +124,10 @@ if __name__ == '__main__':
 
         argparser = argparse.ArgumentParser()
         argparser.add_argument(
-            '--postopp_pardir',
-            type=str,
-            help="Parent directory to postopp data (should have 'data' and 'labels' subdirectories).")
+            '--postopp_pardirs',
+            type=list_of_strings,
+            # nargs='+',
+            help="Parent directories to postopp data (all should have 'data' and 'labels' subdirectories). Length needs to equal num_institutions or be lengh 1.")
         argparser.add_argument(
             '--first_three_digit_task_num',
             type=int,

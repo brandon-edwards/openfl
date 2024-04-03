@@ -80,7 +80,16 @@ def symlink_one_subject(postopp_subject_dir, postopp_data_dirpath, postopp_label
         os.symlink(src=src_path, dst=dst_path)
 
 
-def setup_fedsim_data(postopp_pardir, first_three_digit_task_num, task_name, timestamp_selection='latest', num_institutions=1):
+def doublecheck_postopp_pardir(postopp_pardir):
+    print(f"Checking postopp_pardir: {postopp_pardir}")
+    postopp_subdirs = list(os.listdir(postopp_pardir))
+    if 'data' not in postopp_subdirs:
+        raise ValueError(f"'data' must be a subdirectory of postopp_src_pardir:{postopp_pardir}, but it is not.")
+    if 'labels' not in postopp_subdirs:
+        raise ValueError(f"'labels' must be a subdirectory of postopp_src_pardir:{postopp_pardir}, but it is not.")
+
+
+def setup_fedsim_data(postopp_pardirs, first_three_digit_task_num, task_name, timestamp_selection='latest', num_institutions=1):
     """
     Generates symlinks to be used for NNUnet training, assuming we already have a 
     dataset on file coming from MLCommons RANO experiment data prep.
@@ -90,8 +99,11 @@ def setup_fedsim_data(postopp_pardir, first_three_digit_task_num, task_name, tim
     should be run using a virtual environment that has nnunet version 1 installed.
 
     args:
-    postopp_src_pardir(str)     : Parent directory for postopp data.  
-                                    Should have 'data' and 'labels' subdirectories with structure:
+    postopp_pardirs(list of str)     : Parent directories for postopp data. The length of the list should either be 
+                                   equal to num_insitutions, or one. If the length of the list is one and num_insitutions is not one,
+                                   the samples within that single directory will be used to create num_insititutions shards.
+                                   If the length of this list is equal to num_insitutions, the shards are defined by the samples within each string path.  
+                                   Either way, all string paths within this list should piont to folders that have 'data' and 'labels' subdirectories with structure:
                                     ├── data
                                     │   ├── AAAC_0
                                     │   │   ├── 2008.03.30
@@ -153,20 +165,31 @@ def setup_fedsim_data(postopp_pardir, first_three_digit_task_num, task_name, tim
         create_task_folders(first_three_digit_task_num=first_three_digit_task_num, 
                             num_institutions=num_institutions, 
                             task_name=task_name)
-    
-    postopp_subdirs = list(os.listdir(postopp_pardir))
-    if 'data' not in postopp_subdirs:
-         raise ValueError(f"'data' must be a subdirectory of postopp_src_pardir:{postopp_pardir}, but it is not.")
-    if 'labels' not in postopp_subdirs:
-         raise ValueError(f"'labels' must be a subdirectory of postopp_src_pardir:{postopp_pardir}, but it is not.")
 
-    postopp_data_dirpath = os.path.join(postopp_pardir, 'data')
-    postopp_labels_dirpath = os.path.join(postopp_pardir, 'labels')
+    if len(postopp_pardirs) == 1:
+        postopp_pardir = postopp_pardirs[0]
+        doublecheck_postopp_pardir(postopp_pardir)
+        postopp_data_dirpaths = num_institutions * [os.path.join(postopp_pardir, 'data')]
+        postopp_labels_dirpaths = num_institutions * [os.path.join(postopp_pardir, 'labels')]
 
-    all_subjects = list(os.listdir(postopp_data_dirpath))
-    subject_shards = [all_subjects[start::num_institutions] for start in range(num_institutions)]
+        all_subjects = list(os.listdir(postopp_data_dirpaths[0]))
+        subject_shards = [all_subjects[start::num_institutions] for start in range(num_institutions)]
+    elif len(postopp_pardirs) != num_institutions:
+        raise ValueError(f"The length of postopp_pardirs must be equal to the number of insitutions needed for the federation, or can be length one and an automated split is peroformed.")
+    else:
+        subject_shards = []
+        postopp_data_dirpaths = []
+        postopp_labels_dirpaths = []
+        for postopp_pardir in postopp_pardirs:
+            doublecheck_postopp_pardir(postopp_pardir)
+            postopp_data_dirpath = os.path.join(postopp_pardir, 'data')
+            postopp_labels_dirpath = os.path.join(postopp_pardir, 'labels')
+            postopp_data_dirpaths.append(postopp_data_dirpath)
+            postopp_labels_dirpaths.append(postopp_labels_dirpath)
+            subject_shards.append(os.listdir(postopp_labels_dirpath))
     
-    for shard_idx, (postopp_subject_dirs, task_num, task, nnunet_dst_pardir, nnunet_images_train_pardir, nnunet_labels_train_pardir) in enumerate(zip(subject_shards, task_nums, tasks, nnunet_dst_pardirs, nnunet_images_train_pardirs, nnunet_labels_train_pardirs)):
+    for shard_idx, (postopp_subject_dirs, task_num, task, nnunet_dst_pardir, nnunet_images_train_pardir, nnunet_labels_train_pardir, postopp_data_dirpath, postopp_labels_dirpath) in \
+          enumerate(zip(subject_shards, task_nums, tasks, nnunet_dst_pardirs, nnunet_images_train_pardirs, nnunet_labels_train_pardirs, postopp_data_dirpaths, postopp_labels_dirpaths)):
         print(f"\n######### CREATING SYMLINKS TO POSTOPP DATA FOR COLLABORATOR {shard_idx} #########\n") 
         for postopp_subject_dir in postopp_subject_dirs:
             symlink_one_subject(postopp_subject_dir=postopp_subject_dir, 

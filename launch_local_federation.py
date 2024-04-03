@@ -14,10 +14,8 @@ from openfl.utilities.utils import rmtree
 from tests.github.utils import create_collaborator, create_certified_workspace, certify_aggregator
 
 
-if __name__ == '__main__':
-    GPU_BASE = 2
-
-    with open('local_federation.yaml', 'r') as f:
+def main(gpu_base=0, fed_yaml='local_federation.yaml', **kwargs):
+    with open(fed_yaml, 'r') as f:
         config = yaml.safe_load(f)
     print("running federation with config:")
     for k, v in config.items():
@@ -51,7 +49,7 @@ if __name__ == '__main__':
         for i, col in enumerate(cols.keys()):
             dir = workspace_root / col / fed_workspace
             col_config = {
-                'gpu_num_string':i + GPU_BASE,
+                'gpu_num_string':i + gpu_base,
                 'nnunet_task':cols[col]
             }
             with open(os.path.join(dir, 'nnunet_collaborator_config.yaml'), 'w') as f:
@@ -59,9 +57,22 @@ if __name__ == '__main__':
             executor.submit(check_call, ['fx', 'collaborator', 'start', '-n', col], cwd=dir)
             time.sleep(2)
 
-    # # Convert model to native format
-    # check_call(
-    #     ['fx', 'model', 'save', '-i', f'./save/{template}_last.pbuf', '-o', 'model_from_last_epoch'],
-    #     cwd=workspace_root)
 
-    # rmtree(workspace_root)
+if __name__ == '__main__':
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument(
+        '--gpu_base',
+        type=int,
+        default=0,
+        help="First GPU to use. Second+ collaborators go on the next GPUs")
+    argparser.add_argument(
+        '--fed_yaml',
+        type=str,
+        default='local_federation.yaml',
+        help="yaml file that has the config for the federation")     
+
+    args = argparser.parse_args()
+
+    kwargs = vars(args)
+
+    main(**kwargs)

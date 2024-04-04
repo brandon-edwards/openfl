@@ -8,7 +8,7 @@ from fedsim_model_setup import trim_data_and_setup_fedsim_models
 def list_of_strings(arg):
     return arg.split(',')
 
-def main(postopp_pardirs, first_three_digit_task_num, init_model_path, init_model_info_path, task_name, network, network_trainer, fold, plans_identifier=default_plans_identifier, timestamp_selection='latest', num_institutions=1, cuda_device='0'):
+def main(postopp_pardirs, first_three_digit_task_num, init_model_path, init_model_info_path, task_name, percent_train, split_logic, network, network_trainer, fold, plans_identifier=default_plans_identifier, timestamp_selection='latest', num_institutions=1, cuda_device='0'):
     """
     Generates symlinks to be used for NNUnet training, assuming we already have a 
     dataset on file coming from MLCommons RANO experiment data prep.
@@ -76,6 +76,9 @@ def main(postopp_pardirs, first_three_digit_task_num, init_model_path, init_mode
     init_model_info_path(str)       : path to initial (pretrained) model info pikle file [default None]- must be provided if init_model_path is.
                                       [ONLY USE IF YOU KNOW THE MODEL ARCHITECTURE MAKES SENSE FOR THE FEDERATION. OTHERWISE ARCHITECTURE IS CHOSEN USING COLLABORATOR 0 DATA.]
     task_name(str)                  : Name of task that is part of the task name
+    percent_train(float)            : The percentage of samples to split into the train portion for the fold specified below (NNUnet makes its own folds but we overwrite
+                                      all with None except the fold indicated below and put in our own split instead determined by a hard coded split logic default)
+    split_logic(str)                : How to split the data into train and val for each simulated insitution. Choices are: 'by_subject_only' and 'by_subjecttime_only' (see inner function docstring)
     network(str)                    : NNUnet network to be used
     network_trainer(str)            : NNUnet network trainer to be used
     fold(str)                       : Fold to train on, can be a sting indicating an int, or can be 'all'
@@ -105,20 +108,20 @@ def main(postopp_pardirs, first_three_digit_task_num, init_model_path, init_mode
 
     # task_folder_info is a zipped lists indexed over tasks (collaborators)
     #                  zip(task_nums, tasks, nnunet_dst_pardirs, nnunet_images_train_pardirs, nnunet_labels_train_pardirs)
-    tasks= setup_fedsim_data(postopp_pardirs=postopp_pardirs, 
+    setup_fedsim_data(postopp_pardirs=postopp_pardirs, 
                              first_three_digit_task_num=first_three_digit_task_num, 
-                             task_name=task_name, 
+                             task_name=task_name,
+                             percent_train=percent_train,
+                             split_logic=split_logic,
+                             fold=fold, 
                              timestamp_selection=timestamp_selection, 
-                             num_institutions=num_institutions)
-    # trim 2d data if not working with 2d model, and distribute common model architecture across simulated collaborators
-    trim_data_and_setup_fedsim_models(tasks=tasks, 
-                                      network=network, 
-                                      network_trainer=network_trainer, 
-                                      plans_identifier=plans_identifier, 
-                                      fold=fold, 
-                                      init_model_path=init_model_path, 
-                                      init_model_info_path=init_model_info_path, 
-                                      cuda_device=cuda_device)
+                             num_institutions=num_institutions, 
+                             network=network, 
+                             network_trainer=network_trainer, 
+                             plans_identifier=plans_identifier, 
+                             init_model_path=init_model_path, 
+                             init_model_info_path=init_model_info_path, 
+                             cuda_device=cuda_device)
 
 if __name__ == '__main__':
 
@@ -147,7 +150,17 @@ if __name__ == '__main__':
             type=str,
             help="Part of the NNUnet data task directory name. With 'first_three_digit_task_num being 'XXX', the directory name becomes: .../nnUNet_raw_data_base/nnUNet_raw_data/TaskXXX_<task_name>.")
         argparser.add_argument(
-            '--network',
+            '--percent_train',
+            type=float,
+            default=0.8,
+            help="The percentage of samples to split into the train portion for the fold specified below (NNUnet makes its own folds but we overwrite) - see docstring in main")
+        argparser.add_argument(
+          '--split_logic',
+            type=str,
+            default='by_subject_only',
+            help="How to split the data into train and val for each simulated insitution. Choices are: 'by_subject_only' and 'by_subjecttime_only' (see inner function docstring)")
+        argparser.add_argument(
+          '--network',
             type=str,
             default='3d_fullres',
             help="NNUnet network to be used.")
@@ -164,7 +177,7 @@ if __name__ == '__main__':
         argparser.add_argument(
             '--timestamp_selection',
             type=str,
-            default='latest',
+            default='all',
             help="Indicates how to determine the timestamp to pick for each subject ID at the source: 'latest' and 'earliest' are the only ones supported so far.")        
         argparser.add_argument(
             '--num_institutions',

@@ -92,8 +92,9 @@ def symlink_one_subject(postopp_subject_dir, postopp_data_dirpath, postopp_label
     return timestamps
 
 
-def doublecheck_postopp_pardir(postopp_pardir):
-    print(f"Checking postopp_pardir: {postopp_pardir}")
+def doublecheck_postopp_pardir(postopp_pardir, verbose=False):
+    if verbose:
+        print(f"Checking postopp_pardir: {postopp_pardir}")
     postopp_subdirs = list(os.listdir(postopp_pardir))
     if 'data' not in postopp_subdirs:
         raise ValueError(f"'data' must be a subdirectory of postopp_src_pardir:{postopp_pardir}, but it is not.")
@@ -101,7 +102,7 @@ def doublecheck_postopp_pardir(postopp_pardir):
         raise ValueError(f"'labels' must be a subdirectory of postopp_src_pardir:{postopp_pardir}, but it is not.")
     
 
-def split_by_subject(subject_to_timestamps, percent_train):
+def split_by_subject(subject_to_timestamps, percent_train, verbose=False):
     """
     NOTE: An attempt is made to put percent_train of the total subjects into train (as opposed to val) regardless of how many timestamps there are for each subject. 
      No subject is allowed to have samples in both train and val.
@@ -118,7 +119,7 @@ def split_by_subject(subject_to_timestamps, percent_train):
     return train_subject_to_timestamps, val_subject_to_timestamps
 
 
-def split_by_timed_subjects(subject_to_timestamps, percent_train, random_tries=30):
+def split_by_timed_subjects(subject_to_timestamps, percent_train, random_tries=30, verbose=False):
     """
     NOTE: An attempt is made to put percent_train of the subject timestamp combinations into train (as opposed to val) regardless of what that does to the subject ratios. 
     No subject is allowed to have samples in both train and val.
@@ -129,15 +130,20 @@ def split_by_timed_subjects(subject_to_timestamps, percent_train, random_tries=3
             sub_total += subject_counts[subject]
         return sub_total/grand_total
 
-    def shuffle_and_cut(subject_counts, grand_total, percent_train):
+    def shuffle_and_cut(subject_counts, grand_total, percent_train, verbose=False):
         subjects = list(subject_counts.keys())
         np.random.shuffle(subjects)
         for idx in range(2,len(subjects)):
             train_subjects = subjects[:idx-1]
             val_subjects = subjects[idx-1:]
             percent_train_estimate = percent_train_for_split(train_subjects=train_subjects, grand_total=grand_total)
-            if percent_train_estimate > percent_train:
+            if percent_train_estimate >= percent_train:
+                """
+                if verbose:
+                    print(f"SPLIT COMPUTE - Found one split with percent_train of: {percent_train_estimate}")
+                """
                 return train_subjects, val_subjects, percent_train_estimate
+            
         
     subject_counts = {subject: len(subject_to_timestamps[subject]) for subject in subject_to_timestamps}
     subjects_copy = list(subject_counts.keys()).copy()
@@ -152,33 +158,27 @@ def split_by_timed_subjects(subject_to_timestamps, percent_train, random_tries=3
 
     # random shuffle <random_tries> times in order to find the closest we can get to honoring the percent_train requirement (train and val both need to be non-empty)
     for _ in range(random_tries):
-        train_subjects, val_subjects, percent_train_estimate = shuffle_and_cut(subject_counts=subject_counts, grand_total=grand_total, percent_train=percent_train)
+        train_subjects, val_subjects, percent_train_estimate = shuffle_and_cut(subject_counts=subject_counts, grand_total=grand_total, percent_train=percent_train, verbose=verbose)
         if abs(percent_train_estimate - percent_train) < abs(best_percent_train - percent_train):
             best_train_subjects = train_subjects
             best_val_subjects = val_subjects
             best_percent_train = percent_train_estimate
-    print(f"\n#########\n Split was performed by timed subject and an error of {abs(percent_train_estimate - percent_train)} was acheived in the percent train target.")
+    if verbose:
+        print(f"\n#########\n Split was performed by timed subject and an error of {abs(percent_train_estimate - percent_train)} was acheived in the percent train target.")
     train_subject_to_timestamps = {subject: subject_to_timestamps[subject] for subject in best_train_subjects}
     val_subject_to_timestamps = {subject: subject_to_timestamps[subject] for subject in best_val_subjects}
     return train_subject_to_timestamps, val_subject_to_timestamps
   
 
-def replace_splits_file(nnunet_dst_pardir, subject_to_timestamps, percent_train, split_logic, fold, task, splits_fname='splits_final.pkl'):
+def write_splits_file(nnunet_dst_pardir, subject_to_timestamps, percent_train, split_logic, fold, task, splits_fname='splits_final.pkl', verbose=False):
     # double check we are in the right folder to modify the splits file
     splits_fpath = os.path.join(os.environ['nnUNet_raw_data_base'], 'nnUNet_preprocessed', f'{task}', splits_fname)
-    backup_splits_fpath = os.path.join(nnunet_dst_pardir, 'BACKUP_' + splits_fname)
-    if not os.path.exists(splits_fpath):
-        raise ValueError(f"Splits file was expected to be found at: {splits_fpath}, but it was not.")
-    # read in the splits file (for double checking we got all samples) and copy it to a backup location
-    with open(splits_fpath, 'rb') as f:
-        nnunet_splits = pkl.load(f)
-    shutil.move(src=splits_fpath,dst=backup_splits_fpath) 
 
     # now split
     if split_logic == 'by_subject_only':
-        train_subject_to_timestamps, val_subject_to_timestamps = split_by_subject(subject_to_timestamps=subject_to_timestamps, percent_train=percent_train)
+        train_subject_to_timestamps, val_subject_to_timestamps = split_by_subject(subject_to_timestamps=subject_to_timestamps, percent_train=percent_train, verbose=verbose)
     elif split_logic == 'by_subjecttime_only':
-        train_subject_to_timestamps, val_subject_to_timestamps = split_by_timed_subjects(subject_to_timestamps=subject_to_timestamps, percent_train=percent_train)    
+        train_subject_to_timestamps, val_subject_to_timestamps = split_by_timed_subjects(subject_to_timestamps=subject_to_timestamps, percent_train=percent_train, verbose=verbose)    
     else:
         raise ValueError(f"Split logic of 'by_subject_only' and 'by_subjecttime_only' are the only ones supported, whereas a split_logic value of {split_logic} was provided.")
 
@@ -192,14 +192,9 @@ def replace_splits_file(nnunet_dst_pardir, subject_to_timestamps, percent_train,
         for timestamp in val_subject_to_timestamps[subject]:
             val_subjects_list.append(subject + '_' + timestamp)
 
-    # Now write the splits file (note None is put into the folds that we don't use as a safety measure since there are no actual folds considered here)
-    new_folds = nnunet_splits.copy()
-    for this_fold in range(5):
-        if str(this_fold) != fold:
-            new_folds[this_fold] = None
-        else:
-            new_folds[this_fold] = OrderedDict({'train': np.array(train_subjects_list), 
-                                                'val': np.array(val_subjects_list)})
+    # Now write the splits file (note None is put into the folds that we don't use as a safety measure so that no unintended folds are used)
+    new_folds = [None, None, None, None, None]
+    new_folds[int(fold)] = OrderedDict({'train': np.array(train_subjects_list), 'val': np.array(val_subjects_list)})
     with open(splits_fpath, 'wb') as f:
         pkl.dump(new_folds, f)
 
@@ -217,7 +212,8 @@ def setup_fedsim_data(postopp_pardirs,
                       plans_identifier, 
                       init_model_path, 
                       init_model_info_path, 
-                      cuda_device):
+                      cuda_device, 
+                      verbose=False):
     """
     Generates symlinks to be used for NNUnet training, assuming we already have a 
     dataset on file coming from MLCommons RANO experiment data prep.
@@ -288,6 +284,7 @@ def setup_fedsim_data(postopp_pardirs,
     split_logic(str)                :
     fold(str)                       :   Fold to train on, can be a sting indicating an int, or can be 'all'
     num_institutions(int)          : Number of simulated institutions to shard the data into.
+    verbose(bool)                   : Debugging output if True.
 
     Returns:
     task_nums, tasks, nnunet_dst_pardirs, nnunet_images_train_pardirs, nnunet_labels_train_pardirs 
@@ -300,7 +297,7 @@ def setup_fedsim_data(postopp_pardirs,
 
     if len(postopp_pardirs) == 1:
         postopp_pardir = postopp_pardirs[0]
-        doublecheck_postopp_pardir(postopp_pardir)
+        doublecheck_postopp_pardir(postopp_pardir, verbose=verbose)
         postopp_data_dirpaths = num_institutions * [os.path.join(postopp_pardir, 'data')]
         postopp_labels_dirpaths = num_institutions * [os.path.join(postopp_pardir, 'labels')]
 
@@ -313,13 +310,16 @@ def setup_fedsim_data(postopp_pardirs,
         postopp_data_dirpaths = []
         postopp_labels_dirpaths = []
         for postopp_pardir in postopp_pardirs:
-            doublecheck_postopp_pardir(postopp_pardir)
+            doublecheck_postopp_pardir(postopp_pardir, verbose=verbose)
             postopp_data_dirpath = os.path.join(postopp_pardir, 'data')
             postopp_labels_dirpath = os.path.join(postopp_pardir, 'labels')
             postopp_data_dirpaths.append(postopp_data_dirpath)
             postopp_labels_dirpaths.append(postopp_labels_dirpath)
             subject_shards.append(os.listdir(postopp_labels_dirpath))
     
+    # Track the subjects and timestamps for each shard
+    shard_subject_to_timestamps = []
+
     for shard_idx, (postopp_subject_dirs, task_num, task, nnunet_dst_pardir, nnunet_images_train_pardir, nnunet_labels_train_pardir, postopp_data_dirpath, postopp_labels_dirpath) in \
           enumerate(zip(subject_shards, task_nums, tasks, nnunet_dst_pardirs, nnunet_images_train_pardirs, nnunet_labels_train_pardirs, postopp_data_dirpaths, postopp_labels_dirpaths)):
         print(f"\n######### CREATING SYMLINKS TO POSTOPP DATA FOR COLLABORATOR {shard_idx} #########\n")
@@ -331,7 +331,8 @@ def setup_fedsim_data(postopp_pardirs,
                                                                                nnunet_images_train_pardir=nnunet_images_train_pardir, 
                                                                                nnunet_labels_train_pardir=nnunet_labels_train_pardir, 
                                                                                timestamp_selection=timestamp_selection)
-            
+        shard_subject_to_timestamps.append(subject_to_timestamps)
+        
         # Generate json file for the dataset
         print(f"\n######### GENERATING DATA JSON FILE FOR COLLABORATOR {shard_idx} #########\n")
         json_path = os.path.join(nnunet_dst_pardir, 'dataset.json')
@@ -354,10 +355,14 @@ def setup_fedsim_data(postopp_pardirs,
                                       init_model_info_path=init_model_info_path, 
                                       cuda_device=cuda_device)
     
-    """
-    commenting out for now as splits file creation is still in testing phase
-    for task in tasks:
+    
+    for task, subject_to_timestamps in zip(tasks, shard_subject_to_timestamps):
         # Now compute our own stratified splits file, keeping all timestampts for a given subject exclusively in either train or val
-        replace_splits_file(nnunet_dst_pardir=nnunet_dst_pardir, subject_to_timestamps=subject_to_timestamps, percent_train=percent_train, split_logic=split_logic, fold=fold, task=task)
-    """
-    return tasks
+        write_splits_file(nnunet_dst_pardir=nnunet_dst_pardir, 
+                          subject_to_timestamps=subject_to_timestamps, 
+                          percent_train=percent_train, 
+                          split_logic=split_logic, 
+                          fold=fold, 
+                          task=task, 
+                          verbose=verbose)
+    

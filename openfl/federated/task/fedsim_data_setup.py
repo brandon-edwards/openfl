@@ -133,7 +133,7 @@ def split_by_timed_subjects(subject_to_timestamps, percent_train, random_tries=3
     def shuffle_and_cut(subject_counts, grand_total, percent_train, verbose=False):
         subjects = list(subject_counts.keys())
         np.random.shuffle(subjects)
-        for idx in range(2,len(subjects)):
+        for idx in range(2,len(subjects)+1):
             train_subjects = subjects[:idx-1]
             val_subjects = subjects[idx-1:]
             percent_train_estimate = percent_train_for_split(train_subjects=train_subjects, grand_total=grand_total)
@@ -142,7 +142,9 @@ def split_by_timed_subjects(subject_to_timestamps, percent_train, random_tries=3
                 if verbose:
                     print(f"SPLIT COMPUTE - Found one split with percent_train of: {percent_train_estimate}")
                 """
-                return train_subjects, val_subjects, percent_train_estimate
+                break
+        return train_subjects, val_subjects, percent_train_estimate
+        # above should return by end of loop as percent_train_estimate should be strictly increasing with final value 1.0
             
         
     subject_counts = {subject: len(subject_to_timestamps[subject]) for subject in subject_to_timestamps}
@@ -164,7 +166,7 @@ def split_by_timed_subjects(subject_to_timestamps, percent_train, random_tries=3
             best_val_subjects = val_subjects
             best_percent_train = percent_train_estimate
     if verbose:
-        print(f"\n#########\n Split was performed by timed subject and an error of {abs(percent_train_estimate - percent_train)} was acheived in the percent train target.")
+        print(f"\n#########\n Split was performed by timed subject and an error of {abs(best_percent_train - percent_train)} was acheived in the percent train target.")
     train_subject_to_timestamps = {subject: subject_to_timestamps[subject] for subject in best_train_subjects}
     val_subject_to_timestamps = {subject: subject_to_timestamps[subject] for subject in best_val_subjects}
     return train_subject_to_timestamps, val_subject_to_timestamps
@@ -175,12 +177,12 @@ def write_splits_file(nnunet_dst_pardir, subject_to_timestamps, percent_train, s
     splits_fpath = os.path.join(os.environ['nnUNet_raw_data_base'], 'nnUNet_preprocessed', f'{task}', splits_fname)
 
     # now split
-    if split_logic == 'by_subject_only':
+    if split_logic == 'by_subject':
         train_subject_to_timestamps, val_subject_to_timestamps = split_by_subject(subject_to_timestamps=subject_to_timestamps, percent_train=percent_train, verbose=verbose)
-    elif split_logic == 'by_subjecttime_only':
+    elif split_logic == 'by_subject_time_pair':
         train_subject_to_timestamps, val_subject_to_timestamps = split_by_timed_subjects(subject_to_timestamps=subject_to_timestamps, percent_train=percent_train, verbose=verbose)    
     else:
-        raise ValueError(f"Split logic of 'by_subject_only' and 'by_subjecttime_only' are the only ones supported, whereas a split_logic value of {split_logic} was provided.")
+        raise ValueError(f"Split logic of 'by_subject' and 'by_subject_time_pair' are the only ones supported, whereas a split_logic value of {split_logic} was provided.")
 
     # Now construct the list of subjects
     train_subjects_list = []
@@ -281,7 +283,7 @@ def setup_fedsim_data(postopp_pardirs,
                                    for each subject ID at the source: 'latest', 'earliest', and 'all' are the only ones supported so far
     percent_train(float)            : What percentage of timestamped subjects to attempt dedicate to train versus val. Will be only approximately acheived in general since
                                       all timestamps associated with the same subject need to land exclusively in either train or val.
-    split_logic(str)                :
+    split_logic(str)                : Determines how the percent_train is computed. Choices are: 'by_subject' and 'by_subject_time_pair'.
     fold(str)                       :   Fold to train on, can be a sting indicating an int, or can be 'all'
     num_institutions(int)          : Number of simulated institutions to shard the data into.
     verbose(bool)                   : Debugging output if True.

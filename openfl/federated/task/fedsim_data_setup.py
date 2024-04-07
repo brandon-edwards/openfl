@@ -174,7 +174,7 @@ def split_by_timed_subjects(subject_to_timestamps, percent_train, random_tries=3
 
 def write_splits_file(nnunet_dst_pardir, subject_to_timestamps, percent_train, split_logic, fold, task, splits_fname='splits_final.pkl', verbose=False):
     # double check we are in the right folder to modify the splits file
-    splits_fpath = os.path.join(os.environ['nnUNet_raw_data_base'], 'nnUNet_preprocessed', f'{task}', splits_fname)
+    splits_fpath = os.path.join(os.environ['nnUNet_preprocessed'], f'{task}', splits_fname)
 
     # now split
     if split_logic == 'by_subject':

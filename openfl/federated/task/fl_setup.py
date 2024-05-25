@@ -3,7 +3,6 @@ import argparse
 from nnunet.paths import default_plans_identifier
 
 from fl_data_setup import setup_fl_data
-from fl_model_setup import trim_data_and_setup_fl_models
 
 def list_of_strings(arg):
     return arg.split(',')

@@ -7,7 +7,7 @@ from fl_setup import main as setup_fl
 def list_of_strings(arg):
     return arg.split(',')
 
-def create_task_folders(first_three_digit_task_num, num_institutions, task_name):
+def get_task_folder_names(first_three_digit_task_num, num_institutions, task_name):
     """
     Creates task folders for all simulated instiutions in the federation
     """
@@ -30,10 +30,7 @@ def create_task_folders(first_three_digit_task_num, num_institutions, task_name)
         elif os.path.exists(nnunet_images_train_pardir):
             raise ValueError(f"Train images pardir: {nnunet_images_train_pardir} already exists, please move and run again to prevent overwriting.")
         elif os.path.exists(nnunet_labels_train_pardir):
-            raise ValueError(f"Train labels pardir: {nnunet_labels_train_pardir} already exists, please move and run again to prevent overwriting.")
-        
-        os.makedirs(nnunet_images_train_pardir, exist_ok=False)
-        os.makedirs(nnunet_labels_train_pardir, exist_ok=False) 
+            raise ValueError(f"Train labels pardir: {nnunet_labels_train_pardir} already exists, please move and run again to prevent overwriting.") 
         
         nnunet_dst_pardirs.append(nnunet_dst_pardir)
         nnunet_images_train_pardirs.append(nnunet_images_train_pardir)
@@ -157,7 +154,7 @@ def main(postopp_pardirs,
         tasks, \
         nnunet_dst_pardirs, \
         nnunet_images_train_pardirs, \
-        nnunet_labels_train_pardirs = create_task_folders(first_three_digit_task_num, num_institutions, task_name)
+        nnunet_labels_train_pardirs = get_task_folder_names(first_three_digit_task_num, num_institutions, task_name)
 
     # task_folder_info is a zipped lists indexed over tasks (collaborators)
     for col_idx, (task_num, task, nnunet_dst_pardir, nnun_images_trrain_pardir, nnunet_labels_pardir, postopp_pardir) in enumerate(zip(task_nums, tasks, nnunet_dst_pardirs, nnunet_images_train_pardirs, nnunet_labels_train_pardirs, postopp_pardirs)):

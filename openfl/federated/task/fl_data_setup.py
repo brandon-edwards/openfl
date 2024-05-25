@@ -9,7 +9,7 @@ from collections import OrderedDict
 
 from nnunet.dataset_conversion.utils import generate_dataset_json
 
-from fedsim_model_setup import trim_data_and_setup_model
+from fl_model_setup import trim_data_and_setup_model
 
 
 num_to_modality = {'_0000': '_brain_t1n.nii.gz',
@@ -44,7 +44,7 @@ def create_task_folders(task_num, task_name):
 
     return task, nnunet_dst_pardir, nnunet_images_train_pardir, nnunet_labels_train_pardir
     
-WORKING HRERE
+
 def symlink_one_subject(postopp_subject_dir, postopp_data_dirpath, postopp_labels_dirpath, nnunet_images_train_pardir, nnunet_labels_train_pardir, timestamp_selection):
     postopp_subject_dirpath = os.path.join(postopp_data_dirpath, postopp_subject_dir)
     all_timestamps = sorted(list(os.listdir(postopp_subject_dirpath)))
@@ -288,7 +288,7 @@ def setup_fl_data(postopp_pardir,
     """
 
     task, nnunet_dst_pardir, nnunet_images_train_pardir, nnunet_labels_train_pardir = \
-        create_task_folders(three_digit_task_num=three_digit_task_num, task_name=task_name)
+        create_task_folders(task_num=three_digit_task_num, task_name=task_name)
 
     doublecheck_postopp_pardir(postopp_pardir, verbose=verbose)
     postopp_data_dirpath = os.path.join(postopp_pardir, 'data')

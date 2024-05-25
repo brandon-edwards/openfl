@@ -117,9 +117,10 @@ def trim_data_and_setup_model(task, network, network_trainer, plans_identifier, 
                                       network_trainer=network_trainer, 
                                       plans_identifier=plans_identifier, 
                                       fold=fold)
-    os.makedirs(model_folder, exist_ok=False)
+    if not os.path.exists(model_folder):
+        os.makedirs(model_folder, exist_ok=False)
     
-    col_paths = get_col_model_paths(model_folder=model_folder(network=network, 
+    col_paths = get_col_model_paths(model_folder=get_model_folder(network=network, 
                                                                              task=task, 
                                                                              network_trainer=network_trainer, 
                                                                              plans_identifier=plans_identifier, 

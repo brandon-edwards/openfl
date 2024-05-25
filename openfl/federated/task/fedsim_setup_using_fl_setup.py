@@ -178,8 +178,8 @@ def main(postopp_pardirs,
             if not init_model_path:
                 if init_model_info_path or plans_path:
                     raise ValueError(f"If init_model_path is not provided, then init_model_info_path and plans_path are also not expected.")
-                init_model_path = col_paths['init_model_path']
-                init_model_info_path = col_paths['init_model_info_path']
+                init_model_path = col_paths['initial_model_path']
+                init_model_info_path = col_paths['initial_model_info_path']
                 plans_path = col_paths['plans_path']
 
             setup_fl(postopp_pardir=postopp_pardir, 

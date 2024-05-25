@@ -144,4 +144,4 @@ def trim_data_and_setup_model(task, network, network_trainer, plans_identifier, 
         shutil.copyfile(src=col_paths['initial_model_path'],dst=col_paths['final_model_path'])
         shutil.copyfile(src=col_paths['initial_model_info_path'],dst=col_paths['final_model_info_path'])
 
-    return col_paths['initial_model_path'], col_paths['final_model_path'], col_paths['init_model_info_path'], col_paths['final_model_info_path'], col_paths['plans_path']
+    return col_paths['initial_model_path'], col_paths['final_model_path'], col_paths['initial_model_info_path'], col_paths['final_model_info_path'], col_paths['plans_path']

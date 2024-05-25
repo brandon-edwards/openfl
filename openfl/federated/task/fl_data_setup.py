@@ -327,7 +327,7 @@ def setup_fl_data(postopp_pardir,
     col_paths = {}
     col_paths['initial_model_path'], \
         col_paths['final_model_path'], \
-        col_paths['init_model_info_path'], \
+        col_paths['initial_model_info_path'], \
         col_paths['final_model_info_path'], \
         col_paths['plans_path'] = trim_data_and_setup_model(task=task, 
                                                             network=network, 

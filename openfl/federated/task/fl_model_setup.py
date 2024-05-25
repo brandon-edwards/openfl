@@ -55,8 +55,9 @@ def delete_2d_data(network, task, plans_identifier):
             with open(plan_path_2d, 'rb') as _file:
                 plan_2d = pkl.load(_file)
             data_dir_2d = os.path.join(plan_dirpath, plan_2d['data_identifier'] + '_stage' + str(list(plan_2d['plans_per_stage'].keys())[-1]))
-            print(f"\n###########\nDeleting 2D data directory at: {data_dir_2d} \n##############\n")
-            shutil.rmtree(data_dir_2d)
+            if os.path.exists(data_dir_2d):
+                print(f"\n###########\nDeleting 2D data directory at: {data_dir_2d} \n##############\n")
+                shutil.rmtree(data_dir_2d)
 
 
 def normalize_architecture(reference_plan_path, target_plan_path):

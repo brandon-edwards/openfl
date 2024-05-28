@@ -158,6 +158,7 @@ def main(postopp_pardirs,
 
     # task_folder_info is a zipped lists indexed over tasks (collaborators)
     for col_idx, (task_num, task, nnunet_dst_pardir, nnun_images_trrain_pardir, nnunet_labels_pardir, postopp_pardir) in enumerate(zip(task_nums, tasks, nnunet_dst_pardirs, nnunet_images_train_pardirs, nnunet_labels_train_pardirs, postopp_pardirs)):
+        print(f"\n\n##############\n\nSettup up for postopp_pardir: {postopp_pardir}\n\n##################\n\n")
         if col_idx == 0:
             col_paths = setup_fl(postopp_pardir=postopp_pardir, 
                                   three_digit_task_num=task_num,  

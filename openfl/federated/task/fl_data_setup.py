@@ -39,6 +39,15 @@ def create_task_folders(task_num, task_name):
     elif os.path.exists(nnunet_labels_train_pardir):
         raise ValueError(f"Train labels pardir: {nnunet_labels_train_pardir} already exists, please move and run again to prevent overwriting.")
     
+    # having seen that the raw data directories (above) are empty, we will go ahead and delete other directories (cropped and preprocessed) that correspond to the same task
+    # This is primarily for testing when the same preprocessing is run over and over again
+    task_cropped_pardir = os.path.join(os.environ['nnUNet_raw_data_base'], 'nnUNet_cropped_data', f'{task}')
+    task_preprocessed_pardir = os.path.join(os.environ['nnUNet_raw_data_base'], 'nnUNet_preprocessed', f'{task}')
+
+    shutil.rmtree(task_cropped_pardir)
+    shutil.rmtree(task_preprocessed_pardir)
+
+    
     os.makedirs(nnunet_images_train_pardir, exist_ok=False)
     os.makedirs(nnunet_labels_train_pardir, exist_ok=False)
 
@@ -46,6 +55,7 @@ def create_task_folders(task_num, task_name):
     
 
 def symlink_one_subject(postopp_subject_dir, postopp_data_dirpath, postopp_labels_dirpath, nnunet_images_train_pardir, nnunet_labels_train_pardir, timestamp_selection):
+    print(f"\n#######\nsymlinking subject: {postopp_subject_dir}\n########\nPostopp_data_dirpath: {postopp_data_dirpath}\n\n\n\n")
     postopp_subject_dirpath = os.path.join(postopp_data_dirpath, postopp_subject_dir)
     all_timestamps = sorted(list(os.listdir(postopp_subject_dirpath)))
     if timestamp_selection == 'latest':

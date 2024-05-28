@@ -3,7 +3,7 @@ import pickle as pkl
 import shutil
 
 from nnunet_v1 import train_nnunet
-
+from nnunet.paths import default_plans_identifier
 
 def train_on_task(task, network, network_trainer, fold, cuda_device, plans_identifier, continue_training=False, current_epoch=0):
     os.environ['CUDA_VISIBLE_DEVICES']=cuda_device
@@ -135,8 +135,8 @@ def trim_data_and_setup_model(task, network, network_trainer, plans_identifier, 
     if not init_model_path:
         if plans_path:
             raise ValueError(f"If the initial model is not provided then we do not expect the plans_path to be provided either (plans file and initial model are sourced the same way).")
-        # train for a single epoch to get an initial model
-        train_on_task(task=task, network=network, network_trainer=network_trainer, fold=fold, cuda_device=cuda_device, plans_identifier=plans_identifier)
+        # train for a single epoch to get an initial model (this uses the default plans identifier)
+        train_on_task(task=task, network=network, network_trainer=network_trainer, fold=fold, cuda_device=cuda_device, plans_identifier=default_plans_identifier)
         # now copy the trained final model and info into the initial paths
         shutil.copyfile(src=col_paths['final_model_path'],dst=col_paths['initial_model_path'])
         shutil.copyfile(src=col_paths['final_model_info_path'],dst=col_paths['initial_model_info_path'])

@@ -1,6 +1,5 @@
 import argparse
 import os
-from nnunet.paths import default_plans_identifier
 
 from fl_setup import main as setup_fl
 
@@ -49,7 +48,6 @@ def main(postopp_pardirs,
          network, 
          network_trainer, 
          fold, 
-         plans_identifier=default_plans_identifier, 
          timestamp_selection='latest', 
          num_institutions=1, 
          cuda_device='0', 
@@ -127,7 +125,6 @@ def main(postopp_pardirs,
     network(str)                    : NNUnet network to be used
     network_trainer(str)            : NNUnet network trainer to be used
     fold(str)                       : Fold to train on, can be a sting indicating an int, or can be 'all'
-    plans_identifier(str)           : Used in the plans file naming.
     task_name(str)                  : Any string task name.
     timestamp_selection(str)        : Indicates how to determine the timestamp to pick. Only 'earliest', 'latest', or 'all' are supported.
                                       for each subject ID at the source: 'latest' and 'earliest' are the only ones supported so far
@@ -171,7 +168,6 @@ def main(postopp_pardirs,
                                   init_model_path=init_model_path, 
                                   init_model_info_path=init_model_info_path,
                                   plans_path=plans_path, 
-                                  plans_identifier=default_plans_identifier, 
                                   timestamp_selection=timestamp_selection, 
                                   cuda_device=cuda_device, 
                                   verbose=verbose)
@@ -194,7 +190,6 @@ def main(postopp_pardirs,
                         init_model_path=init_model_path, 
                         init_model_info_path=init_model_info_path,
                         plans_path=plans_path, 
-                        plans_identifier=default_plans_identifier, 
                         timestamp_selection=timestamp_selection, 
                         cuda_device=cuda_device, 
                         verbose=verbose)

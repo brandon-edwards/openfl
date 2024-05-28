@@ -49,7 +49,7 @@ def delete_2d_data(network, task, plans_identifier):
     else:
         preprocessed_path = os.environ['nnUNet_preprocessed']
         plan_dirpath = os.path.join(preprocessed_path, task)
-        plan_path_2d = os.path.join(plan_dirpath, plans_identifier + "_plans_2D.pkl")
+        plan_path_2d = os.path.join(plan_dirpath, "nnUNetPlansv2.1_plans_2D.pkl")
 
         if os.path.exists(plan_dirpath):
             # load 2d plan to help construct 2D data directory

@@ -42,7 +42,7 @@ from nnunet.utilities.task_name_id_conversion import convert_id_to_task_name
 # We will be syncing training across many nodes who independently preprocess data
 # In order to do this we will need to sync the training plans (defining the model architecture etc.)
 # NNUnet does this by overwriting the plans file which includes a unique alternative plans identifier other than the default one
-plans_identifier = 'nnUNetPlans_pretrained_POSTOPP'
+plans_param = 'nnUNetPlans_pretrained_POSTOPP'
 #from nnunet.paths import default_plans_identifier
 
 def seed_everything(seed=1234):
@@ -63,7 +63,7 @@ def train_nnunet(epochs,
                  continue_training=True,
                  validation_only=False, 
                  c=False, 
-                 p=plans_identifier, 
+                 p=plans_param, 
                  use_compressed_data=False, 
                  deterministic=False, 
                  npz=False, 

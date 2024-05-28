@@ -3,10 +3,14 @@ import argparse
 # We will be syncing training across many nodes who independently preprocess data
 # In order to do this we will need to sync the training plans (defining the model architecture etc.)
 # NNUnet does this by overwriting the plans file which includes a unique alternative plans identifier other than the default one
-plans_identifier = 'POSTOPP'
-#from nnunet.paths import default_plans_identifier
+
+from nnunet.paths import default_plans_identifier
 
 from fl_data_setup import setup_fl_data
+
+local_plans_identifier = default_plans_identifier
+shared_plans_identifier = 'nnUNetPlans_pretrained_POSTOPP'
+
 
 def list_of_strings(arg):
     return arg.split(',')
@@ -22,7 +26,8 @@ def main(postopp_pardir,
          init_model_path=None, 
          init_model_info_path=None,
          plans_path=None, 
-         plans_identifier=plans_identifier, 
+         local_plans_identifier=local_plans_identifier,
+         shared_plans_identifier=shared_plans_identifier, 
          timestamp_selection='latest', 
          cuda_device='0', 
          verbose=False):
@@ -97,7 +102,8 @@ def main(postopp_pardir,
     network(str)                    : NNUnet network to be used
     network_trainer(str)            : NNUnet network trainer to be used
     fold(str)                       : Fold to train on, can be a sting indicating an int, or can be 'all'
-    plans_identifier(str)           : Used in the plans file naming.
+    local_plans_identifier(str)     : Used in the plans file naming for collaborators that will be performing local training to produce a pretrained model.
+    shared_plans_identifier(str)    : Used in the plans file naming for the shared plan distributed across the federation.
     task_name(str)                  : Any string task name.
     timestamp_selection(str)        : Indicates how to determine the timestamp to pick. Only 'earliest', 'latest', or 'all' are supported.
                                       for each subject ID at the source: 'latest' and 'earliest' are the only ones supported so far
@@ -128,7 +134,8 @@ def main(postopp_pardir,
                              timestamp_selection=timestamp_selection, 
                              network=network, 
                              network_trainer=network_trainer, 
-                             plans_identifier=plans_identifier, 
+                             local_plans_identifier=local_plans_identifier,
+                             shared_plans_identifier=shared_plans_identifier, 
                              init_model_path=init_model_path, 
                              init_model_info_path=init_model_info_path,
                              plans_path=plans_path, 

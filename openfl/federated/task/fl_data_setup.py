@@ -319,7 +319,7 @@ def setup_fl_data(postopp_pardir,
     # Now call the os process to preprocess the data
     print(f"\n######### OS CALL TO PREPROCESS DATA #########\n")
     if plans_path:
-        subprocess.run(["nnUNet_plan_and_preprocess",  "-t",  f"{three_digit_task_num}", "-overwrite_plans", f"{plans_path}",  "--verify_dataset_integrity"])
+        subprocess.run(["nnUNet_plan_and_preprocess",  "-t",  f"{three_digit_task_num}", "-pl3d", "ExperimentPlanner3D_v21_Pretrained", "-overwrite_plans", f"{plans_path}", "-overwrite_plans_identifier", "POSTOPP", "--verify_dataset_integrity"])
     else:  
         subprocess.run(["nnUNet_plan_and_preprocess",  "-t",  f"{three_digit_task_num}", "--verify_dataset_integrity"])
 
@@ -347,5 +347,9 @@ def setup_fl_data(postopp_pardir,
                           fold=fold, 
                           task=task, 
                           verbose=verbose)
+    
+    if not plans_path:
+        # In this case we have created an initial model with this data, so running preprocesssing again in order to create a 'pretrained' plan similar to what other collaborators will create with our initial plan
+        subprocess.run(["nnUNet_plan_and_preprocess",  "-t",  f"{three_digit_task_num}", "-pl3d", "ExperimentPlanner3D_v21_Pretrained", "-overwrite_plans", f"{col_paths['plans_path']}", "-overwrite_plans_identifier", "POSTOPP", "--verify_dataset_integrity"])
     
     return col_paths

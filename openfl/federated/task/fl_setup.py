@@ -1,6 +1,10 @@
 import argparse
 
-from nnunet.paths import default_plans_identifier
+# We will be syncing training across many nodes who independently preprocess data
+# In order to do this we will need to sync the training plans (defining the model architecture etc.)
+# NNUnet does this by overwriting the plans file which includes a unique alternative plans identifier other than the default one
+plans_identifier = 'POSTOPP'
+#from nnunet.paths import default_plans_identifier
 
 from fl_data_setup import setup_fl_data
 
@@ -18,7 +22,7 @@ def main(postopp_pardir,
          init_model_path=None, 
          init_model_info_path=None,
          plans_path=None, 
-         plans_identifier=default_plans_identifier, 
+         plans_identifier=plans_identifier, 
          timestamp_selection='latest', 
          cuda_device='0', 
          verbose=False):

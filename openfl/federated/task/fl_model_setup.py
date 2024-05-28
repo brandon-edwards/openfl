@@ -5,7 +5,7 @@ import shutil
 from nnunet_v1 import train_nnunet
 
 
-def train_on_task(task, network, network_trainer, fold, cuda_device, continue_training=False, current_epoch=0):
+def train_on_task(task, network, network_trainer, fold, cuda_device, plans_identifier, continue_training=False, current_epoch=0):
     os.environ['CUDA_VISIBLE_DEVICES']=cuda_device
     print(f"###########\nStarting training for task: {task}\n")
     train_nnunet(epochs=1, 
@@ -14,7 +14,8 @@ def train_on_task(task, network, network_trainer, fold, cuda_device, continue_tr
                  task=task, 
                  network_trainer = network_trainer, 
                  fold=fold, 
-                 continue_training=continue_training)
+                 continue_training=continue_training, 
+                 p=plans_identifier)
 
 
 def get_model_folder(network, task, network_trainer, plans_identifier, fold, results_folder=os.environ['RESULTS_FOLDER']):
@@ -106,6 +107,9 @@ def normalize_architecture(reference_plan_path, target_plan_path):
 
 
 def trim_data_and_setup_model(task, network, network_trainer, plans_identifier, fold, init_model_path, init_model_info_path, plans_path, cuda_device='0'):
+    """
+    Note that plans_identifier here is designated from fl_setup.py and is an alternative to the default one due to overwriting of the local plans by a globally distributed one
+    """
 
     # Remove 2D data and 2D data info if appropriate
     if network != '2d':
@@ -132,7 +136,7 @@ def trim_data_and_setup_model(task, network, network_trainer, plans_identifier, 
         if plans_path:
             raise ValueError(f"If the initial model is not provided then we do not expect the plans_path to be provided either (plans file and initial model are sourced the same way).")
         # train for a single epoch to get an initial model
-        train_on_task(task=task, network=network, network_trainer=network_trainer, fold=fold, cuda_device=cuda_device)
+        train_on_task(task=task, network=network, network_trainer=network_trainer, fold=fold, cuda_device=cuda_device, plans_identifier=plans_identifier)
         # now copy the trained final model and info into the initial paths
         shutil.copyfile(src=col_paths['final_model_path'],dst=col_paths['initial_model_path'])
         shutil.copyfile(src=col_paths['final_model_info_path'],dst=col_paths['initial_model_info_path'])

@@ -51,7 +51,7 @@ def delete_2d_data(network, task, plans_identifier):
         plan_dirpath = os.path.join(preprocessed_path, task)
         plan_path_2d = os.path.join(plan_dirpath, "nnUNetPlansv2.1_plans_2D.pkl")
 
-        if os.path.exists(plan_dirpath):
+        if os.path.exists(plan_dirpath) and os.path.exists(plan_path_2d):
             # load 2d plan to help construct 2D data directory
             with open(plan_path_2d, 'rb') as _file:
                 plan_2d = pkl.load(_file)

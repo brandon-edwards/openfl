@@ -331,10 +331,13 @@ def setup_fl_data(postopp_pardir,
     # Now call the os process to preprocess the data
     print(f"\n######### OS CALL TO PREPROCESS DATA #########\n")
     if plans_path:
-        subprocess.run(["nnUNet_plan_and_preprocess",  "-t",  f"{three_digit_task_num}", "-pl3d", "ExperimentPlanner3D_v21_Pretrained", "-overwrite_plans", f"{plans_path}", "-overwrite_plans_identifier", "POSTOPP", "--verify_dataset_integrity"])
+        subprocess.run(["nnUNet_plan_and_preprocess",  "-t",  f"{three_digit_task_num}", "--verify_dataset_integrity"])
+        subprocess.run(["nnUNet_plan_and_preprocess",  "-t",  f"{three_digit_task_num}", "-pl3d", "ExperimentPlanner3D_v21_Pretrained", "-overwrite_plans", f"{plans_path}", "-overwrite_plans_identifier", "POSTOPP", "-no_pp"])
+        plans_identifier_for_model_writing = shared_plans_identifier
     else: 
         # this is a preliminary data setup, which will be passed over to the pretrained plan similar to above after we perform training on this plan 
         subprocess.run(["nnUNet_plan_and_preprocess",  "-t",  f"{three_digit_task_num}", "--verify_dataset_integrity"])
+        plans_identifier_for_model_writing = local_plans_identifier
 
     # trim 2d data if not working with 2d model, then train an initial model if needed (initial_model_path is None) or write in provided model otherwise
     col_paths = {}
@@ -345,7 +348,7 @@ def setup_fl_data(postopp_pardir,
         col_paths['plans_path'] = trim_data_and_setup_model(task=task, 
                                                             network=network, 
                                                             network_trainer=network_trainer, 
-                                                            plans_identifier=local_plans_identifier, 
+                                                            plans_identifier=plans_identifier_for_model_writing, 
                                                             fold=fold, 
                                                             init_model_path=init_model_path, 
                                                             init_model_info_path=init_model_info_path,
@@ -363,7 +366,7 @@ def setup_fl_data(postopp_pardir,
     
     if not plans_path:
         # In this case we have created an initial model with this data, so running preprocesssing again in order to create a 'pretrained' plan similar to what other collaborators will create with our initial plan
-        subprocess.run(["nnUNet_plan_and_preprocess",  "-t",  f"{three_digit_task_num}", "-pl3d", "ExperimentPlanner3D_v21_Pretrained", "-overwrite_plans", f"{col_paths['plans_path']}", "-overwrite_plans_identifier", "POSTOPP", "--verify_dataset_integrity"])
+        subprocess.run(["nnUNet_plan_and_preprocess",  "-t",  f"{three_digit_task_num}", "-pl3d", "ExperimentPlanner3D_v21_Pretrained", "-overwrite_plans", f"{col_paths['plans_path']}", "-overwrite_plans_identifier", "POSTOPP", "--verify_dataset_integrity", "-no_pp"])
         # Now coying the collaborator paths above to a new location that uses the pretrained planner that will be shared across federation
         new_col_paths = {}
         new_col_paths['initial_model_path'], \
@@ -379,6 +382,8 @@ def setup_fl_data(postopp_pardir,
                                                             init_model_info_path=col_paths['initial_model_info_path'],
                                                             plans_path=col_paths['plans_path'], 
                                                             cuda_device=cuda_device)
+        
+        col_paths = new_col_paths
 
     
     return col_paths

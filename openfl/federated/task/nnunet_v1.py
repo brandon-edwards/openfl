@@ -168,7 +168,6 @@ def train_nnunet(epochs,
     #     force_separate_z = True
     # else:
     #     raise ValueError("force_separate_z must be None, True or False. Given: %s" % force_separate_z)
-
     (
         plans_file,
         output_folder_name,
@@ -177,6 +176,9 @@ def train_nnunet(epochs,
         stage,
         trainer_class,
     ) = get_default_configuration(network, task, network_trainer, plans_identifier)
+
+    print(f"Brandon DEBUG - the dataset_dir coming out of get_default_configuration was: {dataset_directory}")
+    print(f"\nBrandon DEBUG - The plans file coming out of get_default_config was: {plans_file}\n")
 
     if trainer_class is None:
         raise RuntimeError(

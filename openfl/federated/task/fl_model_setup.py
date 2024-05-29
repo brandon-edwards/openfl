@@ -60,15 +60,15 @@ def delete_2d_data(network, task, plans_identifier):
                 print(f"\n###########\nDeleting 2D data directory at: {data_dir_2d} \n##############\n")
                 shutil.rmtree(data_dir_2d)
 
-
+"""
 def normalize_architecture(reference_plan_path, target_plan_path):
-    """
-    Take the plan file from reference_plan_path and use its contents to copy architecture into target_plan_path
+    
+    # Take the plan file from reference_plan_path and use its contents to copy architecture into target_plan_path
 
-    NOTE: Here we perform some checks and protection steps so that our assumptions if not correct will more
+    # NOTE: Here we perform some checks and protection steps so that our assumptions if not correct will more
           likely leed to an exception.
     
-    """
+    
     
     assert_same_keys = ['num_stages', 'num_modalities', 'modalities', 'normalization_schemes', 'num_classes', 'all_classes', 'base_num_features', 
                         'use_mask_for_norm', 'keep_only_largest_region', 'min_region_size_per_class', 'min_size_per_class', 'transpose_forward', 
@@ -104,7 +104,7 @@ def normalize_architecture(reference_plan_path, target_plan_path):
 
     # write back to target plan
     write_pickled_obj(obj=target_plan, path=target_plan_path) 
-
+"""
 
 def trim_data_and_setup_model(task, network, network_trainer, plans_identifier, fold, init_model_path, init_model_info_path, plans_path, cuda_device='0'):
     """
@@ -141,7 +141,7 @@ def trim_data_and_setup_model(task, network, network_trainer, plans_identifier, 
         shutil.copyfile(src=col_paths['final_model_path'],dst=col_paths['initial_model_path'])
         shutil.copyfile(src=col_paths['final_model_info_path'],dst=col_paths['initial_model_info_path'])
     else:
-        print(f"\n######### WRITING MODEL, MODEL INFO, and PLANS #########\n")
+        print(f"\n######### WRITING MODEL, MODEL INFO, and PLANS #########\ncol_paths were: {col_paths}\n\n")
         shutil.copy(src=plans_path,dst=col_paths['plans_path'])
         shutil.copyfile(src=init_model_path,dst=col_paths['initial_model_path'])
         shutil.copyfile(src=init_model_info_path,dst=col_paths['initial_model_info_path'])

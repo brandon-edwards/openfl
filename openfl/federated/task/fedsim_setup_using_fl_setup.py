@@ -118,6 +118,8 @@ def main(postopp_pardirs,
                                       [ONLY USE IF YOU KNOW THE MODEL ARCHITECTURE MAKES SENSE FOR THE FEDERATION. OTHERWISE ARCHITECTURE IS CHOSEN USING COLLABORATOR 0 DATA.]
     init_model_info_path(str)       : path to initial (pretrained) model info pikle file [default None]- must be provided if init_model_path is.
                                       [ONLY USE IF YOU KNOW THE MODEL ARCHITECTURE MAKES SENSE FOR THE FEDERATION. OTHERWISE ARCHITECTURE IS CHOSEN USING COLLABORATOR 0 DATA.]
+    plans_path(str)                 : path to initial (pretrained) model plans file [default None]- must be provided if init_model_path is.
+                                      [ONLY USE IF YOU KNOW THE MODEL ARCHITECTURE MAKES SENSE FOR THE FEDERATION. OTHERWISE ARCHITECTURE IS CHOSEN USING COLLABORATOR 0 DATA.]
     task_name(str)                  : Name of task that is part of the task name
     percent_train(float)            : The percentage of samples to split into the train portion for the fold specified below (NNUnet makes its own folds but we overwrite
                                       all with None except the fold indicated below and put in our own split instead determined by a hard coded split logic default)

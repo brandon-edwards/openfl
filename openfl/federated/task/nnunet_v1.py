@@ -177,9 +177,6 @@ def train_nnunet(epochs,
         trainer_class,
     ) = get_default_configuration(network, task, network_trainer, plans_identifier)
 
-    print(f"Brandon DEBUG - the dataset_dir coming out of get_default_configuration was: {dataset_directory}")
-    print(f"\nBrandon DEBUG - The plans file coming out of get_default_config was: {plans_file}\n")
-
     if trainer_class is None:
         raise RuntimeError(
             "Could not find trainer class in nnunet.training.network_training"

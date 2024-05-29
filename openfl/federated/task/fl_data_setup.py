@@ -43,9 +43,10 @@ def create_task_folders(task_num, task_name):
     # This is primarily for testing when the same preprocessing is run over and over again
     task_cropped_pardir = os.path.join(os.environ['nnUNet_raw_data_base'], 'nnUNet_cropped_data', f'{task}')
     task_preprocessed_pardir = os.path.join(os.environ['nnUNet_raw_data_base'], 'nnUNet_preprocessed', f'{task}')
-
-    shutil.rmtree(task_cropped_pardir)
-    shutil.rmtree(task_preprocessed_pardir)
+    if os.path.exists(task_cropped_pardir):
+        shutil.rmtree(task_cropped_pardir)
+    if os.path.exists(task_preprocessed_pardir):
+        shutil.rmtree(task_preprocessed_pardir)
 
     
     os.makedirs(nnunet_images_train_pardir, exist_ok=False)
@@ -385,5 +386,13 @@ def setup_fl_data(postopp_pardir,
         
         col_paths = new_col_paths
 
+        print(f"\n###   ###   ###   ###   ###   ###   ###\n")
+        print(f"A MODEL HAS TRAINED. HERE ARE PATHS WHERE FILES CAN BE OBTAINED:\n")
+        print(f"initial_model_path: {col_paths['initial_model_path']}")
+        print(f"initial_model_info_path: {col_paths['initial_model_info_path']}")
+        print(f"final_model_path: {col_paths['final_model_path']}")
+        print(f"final_model_info_path: {col_paths['final_model_info_path']}")
+        print(f"plans_path: {col_paths['plans_path']}")
+        print(f"\n###   ###   ###   ###   ###   ###   ###\n")
     
     return col_paths

@@ -23,7 +23,7 @@ def subject_time_to_mask_path(pardir, subject, timestamp):
     return os.path.join(pardir, 'labels', '.tumor_segmentation_backup', subject, timestamp,'TumorMasksForQC', mask_fname)
 
 
-def create_task_folders(task_num, task_name):
+def create_task_folders(task_num, task_name, overwrite_nnunet_datadirs):
     task = f'Task{str(task_num)}_{task_name}'
 
     # The NNUnet data path is obtained from an environmental variable
@@ -32,21 +32,30 @@ def create_task_folders(task_num, task_name):
     nnunet_images_train_pardir = os.path.join(nnunet_dst_pardir, 'imagesTr')
     nnunet_labels_train_pardir = os.path.join(nnunet_dst_pardir, 'labelsTr')
 
-    if os.path.exists(nnunet_images_train_pardir) and os.path.exists(nnunet_labels_train_pardir):
-        raise ValueError(f"Train images pardirs: {nnunet_images_train_pardir} and {nnunet_labels_train_pardir} both already exist. Please move them both and rerun to prevent overwriting.")
-    elif os.path.exists(nnunet_images_train_pardir):
-        raise ValueError(f"Train images pardir: {nnunet_images_train_pardir} already exists, please move and run again to prevent overwriting.")
-    elif os.path.exists(nnunet_labels_train_pardir):
-        raise ValueError(f"Train labels pardir: {nnunet_labels_train_pardir} already exists, please move and run again to prevent overwriting.")
-    
-    # having seen that the raw data directories (above) are empty, we will go ahead and delete other directories (cropped and preprocessed) that correspond to the same task
-    # This is primarily for testing when the same preprocessing is run over and over again
     task_cropped_pardir = os.path.join(os.environ['nnUNet_raw_data_base'], 'nnUNet_cropped_data', f'{task}')
     task_preprocessed_pardir = os.path.join(os.environ['nnUNet_raw_data_base'], 'nnUNet_preprocessed', f'{task}')
-    if os.path.exists(task_cropped_pardir):
-        shutil.rmtree(task_cropped_pardir)
-    if os.path.exists(task_preprocessed_pardir):
-        shutil.rmtree(task_preprocessed_pardir)
+
+    if not overwrite_nnunet_datadirs:
+        if os.path.exists(nnunet_images_train_pardir) and os.path.exists(nnunet_labels_train_pardir):
+            raise ValueError(f"Train images pardirs: {nnunet_images_train_pardir} and {nnunet_labels_train_pardir} both already exist. Please move them both and rerun to prevent overwriting.")
+        elif os.path.exists(nnunet_images_train_pardir):
+            raise ValueError(f"Train images pardir: {nnunet_images_train_pardir} already exists, please move and run again to prevent overwriting.")
+        elif os.path.exists(nnunet_labels_train_pardir):
+            raise ValueError(f"Train labels pardir: {nnunet_labels_train_pardir} already exists, please move and run again to prevent overwriting.")
+        
+        if os.path.exists(task_cropped_pardir):
+            raise ValueError(f"Cropped data pardir: {task_cropped_pardir} already exists, please move and run again to prevent overwriting.")
+        if os.path.exists(task_preprocessed_pardir):
+            raise ValueError(f"Preprocessed data pardir: {task_preprocessed_pardir} already exists, please move and run again to prevent overwriting.")
+    else:      
+        if os.path.exists(task_cropped_pardir):
+            shutil.rmtree(task_cropped_pardir)
+        if os.path.exists(task_preprocessed_pardir):
+            shutil.rmtree(task_preprocessed_pardir)
+        if os.path.exists(nnunet_images_train_pardir):
+            shutil.rmtree(nnunet_images_train_pardir)
+        if os.path.exists(nnunet_labels_train_pardir):
+            shutil.rmtree(nnunet_labels_train_pardir)
 
     
     os.makedirs(nnunet_images_train_pardir, exist_ok=False)
@@ -213,6 +222,7 @@ def setup_fl_data(postopp_pardir,
                       init_model_path, 
                       init_model_info_path, 
                       cuda_device,
+                      overwrite_nnunet_datadirs,
                       plans_path=None, 
                       verbose=False):
     """
@@ -288,6 +298,8 @@ def setup_fl_data(postopp_pardir,
     shared_plans_identifier(str)    : Used in the plans file name for creation and dissemination of the shared plan to be used in the federation
     init_model_path(str)            : Path to the initial model
     init_model_info_path(str)       : Path to the initial model info (pkl) file
+    cuda_device(str)                : Device to perform training ('cpu' or 'cuda')
+    overwrite_nnunet_datadirs(bool) : Allows for overwriting past instances of NNUnet data directories using the task numbers from first_three_digit_task_num to that plus one less than number of insitutions.
     plans_path(str)                 : Path to the training plans (pkl)
     percent_train(float)            : What percentage of timestamped subjects to attempt dedicate to train versus val. Will be only approximately acheived in general since
                                       all timestamps associated with the same subject need to land exclusively in either train or val.
@@ -301,7 +313,7 @@ def setup_fl_data(postopp_pardir,
     """
 
     task, nnunet_dst_pardir, nnunet_images_train_pardir, nnunet_labels_train_pardir = \
-        create_task_folders(task_num=three_digit_task_num, task_name=task_name)
+        create_task_folders(task_num=three_digit_task_num, task_name=task_name, overwrite_nnunet_datadirs=overwrite_nnunet_datadirs)
 
     doublecheck_postopp_pardir(postopp_pardir, verbose=verbose)
     postopp_data_dirpath = os.path.join(postopp_pardir, 'data')

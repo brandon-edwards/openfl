@@ -6,7 +6,7 @@ from fl_setup import main as setup_fl
 def list_of_strings(arg):
     return arg.split(',')
 
-def get_task_folder_names(first_three_digit_task_num, num_institutions, task_name):
+def get_task_folder_names(first_three_digit_task_num, num_institutions, task_name, overwrite_nnunet_datadirs):
     """
     Creates task folders for all simulated instiutions in the federation
     """
@@ -50,7 +50,8 @@ def main(postopp_pardirs,
          fold, 
          timestamp_selection='latest', 
          num_institutions=1, 
-         cuda_device='0', 
+         cuda_device='0',
+         overwrite_nnunet_datadirs=False,
          verbose=False):
     """
     Generates symlinks to be used for NNUnet training, assuming we already have a 
@@ -132,6 +133,7 @@ def main(postopp_pardirs,
                                       for each subject ID at the source: 'latest' and 'earliest' are the only ones supported so far
     num_institutions(int)           : Number of simulated institutions to shard the data into.
     verbose(bool)                   : If True, print debugging information.
+    overwrite_nnunet_datadirs(bool) : Allows for overwriting past instances of NNUnet data directories using the task numbers from first_three_digit_task_num to that plus one less than number of insitutions
     """
     
     # some argument inspection
@@ -149,14 +151,10 @@ def main(postopp_pardirs,
           if not init_model_info_path.endswith('.model.pkl'):
                 raise ValueError(f"Initial model info file should end with, 'model.pkl'")
           
-    task_nums, \
-        tasks, \
-        nnunet_dst_pardirs, \
-        nnunet_images_train_pardirs, \
-        nnunet_labels_train_pardirs = get_task_folder_names(first_three_digit_task_num, num_institutions, task_name)
+    task_nums = range(first_three_digit_task_num, first_three_digit_task_num + num_institutions)
 
     # task_folder_info is a zipped lists indexed over tasks (collaborators)
-    for col_idx, (task_num, task, nnunet_dst_pardir, nnun_images_trrain_pardir, nnunet_labels_pardir, postopp_pardir) in enumerate(zip(task_nums, tasks, nnunet_dst_pardirs, nnunet_images_train_pardirs, nnunet_labels_train_pardirs, postopp_pardirs)):
+    for col_idx, (task_num, postopp_pardir) in enumerate(zip(task_nums,postopp_pardirs)):
         print(f"\n\n##############\n\nSettup up for postopp_pardir: {postopp_pardir}\n\n##################\n\n")
         if col_idx == 0:
             col_paths = setup_fl(postopp_pardir=postopp_pardir, 
@@ -171,7 +169,8 @@ def main(postopp_pardirs,
                                   init_model_info_path=init_model_info_path,
                                   plans_path=plans_path, 
                                   timestamp_selection=timestamp_selection, 
-                                  cuda_device=cuda_device, 
+                                  cuda_device=cuda_device,
+                                  overwrite_nnunet_datadirs=overwrite_nnunet_datadirs, 
                                   verbose=verbose)
         else: 
             if not init_model_path:
@@ -193,7 +192,8 @@ def main(postopp_pardirs,
                         init_model_info_path=init_model_info_path,
                         plans_path=plans_path, 
                         timestamp_selection=timestamp_selection, 
-                        cuda_device=cuda_device, 
+                        cuda_device=cuda_device,
+                        overwrite_nnunet_datadirs=overwrite_nnunet_datadirs, 
                         verbose=verbose)
         
 
@@ -272,7 +272,11 @@ if __name__ == '__main__':
         argparser.add_argument(
             '--verbose',
             action='store_true',
-            help="Print debuging information.")    
+            help="Print debuging information.")
+        argparser.add_argument(
+            '--overwrite_nnunet_datadirs',
+            action='store_true',
+            help="Allows overwriting NNUnet directories with task numbers from first_three_digit_task_num to that plus one les than number of insitutions.")    
 
         args = argparser.parse_args()
 

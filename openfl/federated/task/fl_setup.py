@@ -210,7 +210,11 @@ if __name__ == '__main__':
             '--cuda_device',
             type=str,
             default='0',
-            help="Used for the setting of os.environ['CUDA_VISIBLE_DEVICES']") 
+            help="Used for the setting of os.environ['CUDA_VISIBLE_DEVICES']")
+        argparser.add_argument(
+            '--overwrite_nnunet_datadirs',
+            action='store_true',
+            help="Allows overwriting NNUnet directories with task numbers from first_three_digit_task_num to that plus one les than number of insitutions.")
         argparser.add_argument(
             '--verbose',
             action='store_true',

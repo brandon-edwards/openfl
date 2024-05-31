@@ -38,17 +38,17 @@ def get_task_folder_names(first_three_digit_task_num, num_institutions, task_nam
     return task_nums, tasks, nnunet_dst_pardirs, nnunet_images_train_pardirs, nnunet_labels_train_pardirs
 
 def main(postopp_pardirs, 
-         first_three_digit_task_num, 
-         init_model_path, 
-         init_model_info_path,
-         plans_path, 
+         first_three_digit_task_num,
          task_name, 
-         percent_train, 
-         split_logic, 
-         network, 
-         network_trainer, 
-         fold, 
-         timestamp_selection='latest', 
+         init_model_path=None, 
+         init_model_info_path=None,
+         plans_path=None,  
+         percent_train=0.8, 
+         split_logic='by_subject_time_pair', 
+         network='3d_fullres', 
+         network_trainer='nnUNetTrainerV2', 
+         fold='0', 
+         timestamp_selection='all', 
          num_institutions=1, 
          cuda_device='0',
          overwrite_nnunet_datadirs=False,
@@ -157,7 +157,7 @@ def main(postopp_pardirs,
     for col_idx, (task_num, postopp_pardir) in enumerate(zip(task_nums,postopp_pardirs)):
         print(f"\n\n##############\n\nSettup up for postopp_pardir: {postopp_pardir}\n\n##################\n\n")
         if col_idx == 0:
-            col_paths = setup_fl(postopp_pardir=postopp_pardir, 
+            first_col_paths = setup_fl(postopp_pardir=postopp_pardir, 
                                   three_digit_task_num=task_num,  
                                   task_name=task_name, 
                                   percent_train=percent_train, 
@@ -176,9 +176,9 @@ def main(postopp_pardirs,
             if not init_model_path:
                 if init_model_info_path or plans_path:
                     raise ValueError(f"If init_model_path is not provided, then init_model_info_path and plans_path are also not expected.")
-                init_model_path = col_paths['initial_model_path']
-                init_model_info_path = col_paths['initial_model_info_path']
-                plans_path = col_paths['plans_path']
+                init_model_path = first_col_paths['initial_model_path']
+                init_model_info_path = first_col_paths['initial_model_info_path']
+                plans_path = first_col_paths['plans_path']
 
             setup_fl(postopp_pardir=postopp_pardir, 
                         three_digit_task_num=task_num,  
@@ -195,6 +195,7 @@ def main(postopp_pardirs,
                         cuda_device=cuda_device,
                         overwrite_nnunet_datadirs=overwrite_nnunet_datadirs, 
                         verbose=verbose)
+    return first_col_paths
         
 
 

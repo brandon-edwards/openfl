@@ -29,7 +29,7 @@ def main(postopp_pardir,
          local_plans_identifier=local_plans_identifier,
          shared_plans_identifier=shared_plans_identifier,
          overwrite_nnunet_datadirs=False, 
-         timestamp_selection='latest', 
+         timestamp_selection='all', 
          cuda_device='0', 
          verbose=False):
     """

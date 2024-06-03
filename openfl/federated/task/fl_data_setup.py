@@ -64,8 +64,9 @@ def create_task_folders(task_num, task_name, overwrite_nnunet_datadirs):
     return task, nnunet_dst_pardir, nnunet_images_train_pardir, nnunet_labels_train_pardir
     
 
-def symlink_one_subject(postopp_subject_dir, postopp_data_dirpath, postopp_labels_dirpath, nnunet_images_train_pardir, nnunet_labels_train_pardir, timestamp_selection):
-    print(f"\n#######\nsymlinking subject: {postopp_subject_dir}\n########\nPostopp_data_dirpath: {postopp_data_dirpath}\n\n\n\n")
+def symlink_one_subject(postopp_subject_dir, postopp_data_dirpath, postopp_labels_dirpath, nnunet_images_train_pardir, nnunet_labels_train_pardir, timestamp_selection, verbose=False):
+    if verbose:
+        print(f"\n#######\nsymlinking subject: {postopp_subject_dir}\n########\nPostopp_data_dirpath: {postopp_data_dirpath}\n\n\n\n")
     postopp_subject_dirpath = os.path.join(postopp_data_dirpath, postopp_subject_dir)
     all_timestamps = sorted(list(os.listdir(postopp_subject_dirpath)))
     if timestamp_selection == 'latest':
@@ -332,7 +333,8 @@ def setup_fl_data(postopp_pardir,
                                                                             postopp_labels_dirpath=postopp_labels_dirpath, 
                                                                             nnunet_images_train_pardir=nnunet_images_train_pardir, 
                                                                             nnunet_labels_train_pardir=nnunet_labels_train_pardir, 
-                                                                            timestamp_selection=timestamp_selection)
+                                                                            timestamp_selection=timestamp_selection, 
+                                                                            verbose=verbose)
         
     # Generate json file for the dataset
     print(f"\n######### GENERATING DATA JSON FILE #########\n")

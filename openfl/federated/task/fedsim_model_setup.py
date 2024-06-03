@@ -2,8 +2,9 @@ import os
 import pickle as pkl
 import shutil
 
-from nnunet_v1 import train_nnunet
-
+# for testing, replacing import with a version that was consistent with older one
+# from nnunet_v1 import train_nnunet
+from nnunet_v1_with_old_plans_name_hardcoded import train_nnunet
 
 def train_on_task(task, network, network_trainer, fold, cuda_device, continue_training=False, current_epoch=0):
     os.environ['CUDA_VISIBLE_DEVICES']=cuda_device

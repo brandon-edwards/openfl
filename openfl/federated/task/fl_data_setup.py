@@ -180,9 +180,10 @@ def split_by_timed_subjects(subject_to_timestamps, percent_train, random_tries=3
     return train_subject_to_timestamps, val_subject_to_timestamps
   
 
-def write_splits_file(nnunet_dst_pardir, subject_to_timestamps, percent_train, split_logic, fold, task, splits_fname='splits_final.pkl', verbose=False):
+def write_splits_file(subject_to_timestamps, percent_train, split_logic, fold, task, splits_fname='splits_final.pkl', verbose=False):
     # double check we are in the right folder to modify the splits file
     splits_fpath = os.path.join(os.environ['nnUNet_preprocessed'], f'{task}', splits_fname)
+    POSTOPP_splits_fpath = os.path.join(os.environ['nnUNet_preprocessed'], f'{task}', 'POSTOPP_BACKUP_' + splits_fname)
 
     # now split
     if split_logic == 'by_subject':
@@ -205,7 +206,12 @@ def write_splits_file(nnunet_dst_pardir, subject_to_timestamps, percent_train, s
     # Now write the splits file (note None is put into the folds that we don't use as a safety measure so that no unintended folds are used)
     new_folds = [None, None, None, None, None]
     new_folds[int(fold)] = OrderedDict({'train': np.array(train_subjects_list), 'val': np.array(val_subjects_list)})
+    
     with open(splits_fpath, 'wb') as f:
+        pkl.dump(new_folds, f)
+
+    # Making an extra copy to test that things are not overwriten later
+    with open(POSTOPP_splits_fpath, 'wb') as f:
         pkl.dump(new_folds, f)
 
 
@@ -354,6 +360,14 @@ def setup_fl_data(postopp_pardir,
         subprocess.run(["nnUNet_plan_and_preprocess",  "-t",  f"{three_digit_task_num}", "--verify_dataset_integrity"])
         plans_identifier_for_model_writing = local_plans_identifier
 
+    # Now compute our own stratified splits file, keeping all timestampts for a given subject exclusively in either train or val
+    write_splits_file(subject_to_timestamps=subject_to_timestamps, 
+                          percent_train=percent_train, 
+                          split_logic=split_logic, 
+                          fold=fold, 
+                          task=task, 
+                          verbose=verbose)
+
     # trim 2d data if not working with 2d model, then train an initial model if needed (initial_model_path is None) or write in provided model otherwise
     col_paths = {}
     col_paths['initial_model_path'], \
@@ -369,15 +383,6 @@ def setup_fl_data(postopp_pardir,
                                                             init_model_info_path=init_model_info_path,
                                                             plans_path=plans_path, 
                                                             cuda_device=cuda_device)
-    
-    # Now compute our own stratified splits file, keeping all timestampts for a given subject exclusively in either train or val
-    write_splits_file(nnunet_dst_pardir=nnunet_dst_pardir, 
-                          subject_to_timestamps=subject_to_timestamps, 
-                          percent_train=percent_train, 
-                          split_logic=split_logic, 
-                          fold=fold, 
-                          task=task, 
-                          verbose=verbose)
     
     if not plans_path:
         # In this case we have created an initial model with this data, so running preprocesssing again in order to create a 'pretrained' plan similar to what other collaborators will create with our initial plan

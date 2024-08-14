@@ -1,0 +1,1932 @@
+
+
+Please cite the following paper when using nnUNet:
+
+Isensee, F., Jaeger, P.F., Kohl, S.A.A. et al. "nnU-Net: a self-configuring method for deep learning-based biomedical image segmentation." Nat Methods (2020). https://doi.org/10.1038/s41592-020-01008-z
+
+
+If you have questions or suggestions, feel free to open an issue at https://github.com/MIC-DKFZ/nnUNet
+
+Verifying training set
+checking case BraTS2021_00058_2008.03.26
+checking case BraTS2021_00058_2008.12.11
+checking case BraTS2021_00155_2008.03.26
+checking case BraTS2021_00155_2008.12.11
+checking case BraTS2021_01630_2008.03.26
+checking case BraTS2021_01630_2008.12.11
+checking case BraTS2021_01647_2008.03.26
+checking case BraTS2021_01647_2008.12.11
+Verifying label values
+Expected label values are [0, 1, 2, 3, 4]
+Labels OK
+Dataset OK
+BraTS2021_01647_2008.12.11
+before crop: (4, 155, 240, 240) after crop: (4, 143, 169, 133) spacing: [1. 1. 1.] 
+
+BraTS2021_01647_2008.03.26
+before crop: (4, 155, 240, 240) after crop: (4, 143, 169, 133) spacing: [1. 1. 1.] 
+
+BraTS2021_01630_2008.12.11
+before crop: (4, 155, 240, 240) after crop: (4, 141, 170, 138) spacing: [1. 1. 1.] 
+
+BraTS2021_01630_2008.03.26
+before crop: (4, 155, 240, 240) after crop: (4, 141, 170, 138) spacing: [1. 1. 1.] 
+
+BraTS2021_00058_2008.03.26
+before crop: (4, 155, 240, 240) after crop: (4, 137, 159, 139) spacing: [1. 1. 1.] 
+
+BraTS2021_00155_2008.12.11
+before crop: (4, 155, 240, 240) after crop: (4, 137, 179, 137) spacing: [1. 1. 1.] 
+
+BraTS2021_00058_2008.12.11
+before crop: (4, 155, 240, 240) after crop: (4, 137, 159, 139) spacing: [1. 1. 1.] 
+
+BraTS2021_00155_2008.03.26
+before crop: (4, 155, 240, 240) after crop: (4, 137, 179, 137) spacing: [1. 1. 1.] 
+
+
+
+
+ Task522_MultPathTest
+number of threads:  (8, 8) 
+
+using nonzero mask for normalization
+using nonzero mask for normalization
+using nonzero mask for normalization
+using nonzero mask for normalization
+Are we using the nonzero mask for normalization? OrderedDict([(0, True), (1, True), (2, True), (3, True)])
+the median shape of the dataset is  [139.  169.5 137.5]
+the max shape in the dataset is  [143. 179. 139.]
+the min shape in the dataset is  [137. 159. 133.]
+we don't want feature maps smaller than  4  in the bottleneck
+the transposed median shape of the dataset is  [139.  169.5 137.5]
+generating configuration for 3d_fullres
+{0: {'batch_size': 2, 'num_pool_per_axis': [5, 5, 5], 'patch_size': array([128, 128, 128]), 'median_patient_size_in_voxels': array([139, 170, 138]), 'current_spacing': array([1., 1., 1.]), 'original_spacing': array([1., 1., 1.]), 'do_dummy_2D_data_aug': False, 'pool_op_kernel_sizes': [[2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2]], 'conv_kernel_sizes': [[3, 3, 3], [3, 3, 3], [3, 3, 3], [3, 3, 3], [3, 3, 3], [3, 3, 3]]}}
+transpose forward [0, 1, 2]
+transpose backward [0, 1, 2]
+Initializing to run preprocessing
+npz folder: /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_cropped_data/Task522_MultPathTest
+output_folder: /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task522_MultPathTest
+no resampling necessary
+no resampling necessary
+before: {'spacing': array([1., 1., 1.]), 'spacing_transposed': array([1., 1., 1.]), 'data.shape (data is transposed)': (4, 137, 159, 139)} 
+after:  {'spacing': array([1., 1., 1.]), 'data.shape (data is resampled)': (4, 137, 159, 139)} 
+
+1 2658
+2 10000
+4 7997
+saving:  /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task522_MultPathTest/nnUNetData_plans_v2.1_stage0/BraTS2021_00058_2008.03.26.npz
+no resampling necessary
+no resampling necessary
+before: {'spacing': array([1., 1., 1.]), 'spacing_transposed': array([1., 1., 1.]), 'data.shape (data is transposed)': (4, 137, 159, 139)} 
+after:  {'spacing': array([1., 1., 1.]), 'data.shape (data is resampled)': (4, 137, 159, 139)} 
+
+1 2658
+2 10000
+4 7997
+saving:  /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task522_MultPathTest/nnUNetData_plans_v2.1_stage0/BraTS2021_00058_2008.12.11.npz
+no resampling necessary
+no resampling necessary
+before: {'spacing': array([1., 1., 1.]), 'spacing_transposed': array([1., 1., 1.]), 'data.shape (data is transposed)': (4, 143, 169, 133)} 
+after:  {'spacing': array([1., 1., 1.]), 'data.shape (data is resampled)': (4, 143, 169, 133)} 
+
+1 336
+2 10000
+4 10000
+saving:  /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task522_MultPathTest/nnUNetData_plans_v2.1_stage0/BraTS2021_01647_2008.12.11.npz
+no resampling necessary
+no resampling necessary
+before: {'spacing': array([1., 1., 1.]), 'spacing_transposed': array([1., 1., 1.]), 'data.shape (data is transposed)': (4, 143, 169, 133)} 
+after:  {'spacing': array([1., 1., 1.]), 'data.shape (data is resampled)': (4, 143, 169, 133)} 
+
+1 336
+2 10000
+4 10000
+saving:  /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task522_MultPathTest/nnUNetData_plans_v2.1_stage0/BraTS2021_01647_2008.03.26.npz
+no resampling necessary
+no resampling necessary
+before: {'spacing': array([1., 1., 1.]), 'spacing_transposed': array([1., 1., 1.]), 'data.shape (data is transposed)': (4, 141, 170, 138)} 
+after:  {'spacing': array([1., 1., 1.]), 'data.shape (data is resampled)': (4, 141, 170, 138)} 
+
+1 3415
+2 10000
+4 10000
+saving:  /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task522_MultPathTest/nnUNetData_plans_v2.1_stage0/BraTS2021_01630_2008.12.11.npz
+no resampling necessary
+no resampling necessary
+before: {'spacing': array([1., 1., 1.]), 'spacing_transposed': array([1., 1., 1.]), 'data.shape (data is transposed)': (4, 137, 179, 137)} 
+after:  {'spacing': array([1., 1., 1.]), 'data.shape (data is resampled)': (4, 137, 179, 137)} 
+
+1 450
+2 10000
+4 1136
+saving:  /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task522_MultPathTest/nnUNetData_plans_v2.1_stage0/BraTS2021_00155_2008.03.26.npz
+no resampling necessary
+no resampling necessary
+before: {'spacing': array([1., 1., 1.]), 'spacing_transposed': array([1., 1., 1.]), 'data.shape (data is transposed)': (4, 137, 179, 137)} 
+after:  {'spacing': array([1., 1., 1.]), 'data.shape (data is resampled)': (4, 137, 179, 137)} 
+
+1 450
+2 10000
+4 1136
+saving:  /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task522_MultPathTest/nnUNetData_plans_v2.1_stage0/BraTS2021_00155_2008.12.11.npz
+no resampling necessary
+no resampling necessary
+before: {'spacing': array([1., 1., 1.]), 'spacing_transposed': array([1., 1., 1.]), 'data.shape (data is transposed)': (4, 141, 170, 138)} 
+after:  {'spacing': array([1., 1., 1.]), 'data.shape (data is resampled)': (4, 141, 170, 138)} 
+
+1 3415
+2 10000
+4 10000
+saving:  /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task522_MultPathTest/nnUNetData_plans_v2.1_stage0/BraTS2021_01630_2008.03.26.npz
+using nonzero mask for normalization
+using nonzero mask for normalization
+using nonzero mask for normalization
+using nonzero mask for normalization
+Are we using the nonzero mask for normalization? OrderedDict([(0, True), (1, True), (2, True), (3, True)])
+the median shape of the dataset is  [139.  169.5 137.5]
+the max shape in the dataset is  [143. 179. 139.]
+the min shape in the dataset is  [137. 159. 133.]
+we don't want feature maps smaller than  4  in the bottleneck
+the transposed median shape of the dataset is  [139.  169.5 137.5]
+[{'batch_size': 42, 'num_pool_per_axis': [5, 5], 'patch_size': array([192, 160]), 'median_patient_size_in_voxels': array([139, 170, 138]), 'current_spacing': array([1., 1., 1.]), 'original_spacing': array([1., 1., 1.]), 'pool_op_kernel_sizes': [[2, 2], [2, 2], [2, 2], [2, 2], [2, 2]], 'conv_kernel_sizes': [[3, 3], [3, 3], [3, 3], [3, 3], [3, 3], [3, 3]], 'do_dummy_2D_data_aug': False}]
+Initializing to run preprocessing
+npz folder: /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_cropped_data/Task522_MultPathTest
+output_folder: /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task522_MultPathTest
+no resampling necessary
+no resampling necessary
+before: {'spacing': array([1., 1., 1.]), 'spacing_transposed': array([1., 1., 1.]), 'data.shape (data is transposed)': (4, 137, 159, 139)} 
+after:  {'spacing': array([1., 1., 1.]), 'data.shape (data is resampled)': (4, 137, 159, 139)} 
+
+normalization...
+normalization done
+1 2658
+2 10000
+4 7997
+saving:  /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task522_MultPathTest/nnUNetData_plans_v2.1_2D_stage0/BraTS2021_00058_2008.12.11.npz
+no resampling necessary
+no resampling necessary
+before: {'spacing': array([1., 1., 1.]), 'spacing_transposed': array([1., 1., 1.]), 'data.shape (data is transposed)': (4, 137, 159, 139)} 
+after:  {'spacing': array([1., 1., 1.]), 'data.shape (data is resampled)': (4, 137, 159, 139)} 
+
+normalization...
+normalization done
+1 2658
+2 10000
+4 7997
+saving:  /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task522_MultPathTest/nnUNetData_plans_v2.1_2D_stage0/BraTS2021_00058_2008.03.26.npz
+no resampling necessary
+no resampling necessary
+before: {'spacing': array([1., 1., 1.]), 'spacing_transposed': array([1., 1., 1.]), 'data.shape (data is transposed)': (4, 143, 169, 133)} 
+after:  {'spacing': array([1., 1., 1.]), 'data.shape (data is resampled)': (4, 143, 169, 133)} 
+
+normalization...
+normalization done
+1 336
+2 10000
+4 10000
+saving:  /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task522_MultPathTest/nnUNetData_plans_v2.1_2D_stage0/BraTS2021_01647_2008.03.26.npz
+no resampling necessary
+no resampling necessary
+before: {'spacing': array([1., 1., 1.]), 'spacing_transposed': array([1., 1., 1.]), 'data.shape (data is transposed)': (4, 143, 169, 133)} 
+after:  {'spacing': array([1., 1., 1.]), 'data.shape (data is resampled)': (4, 143, 169, 133)} 
+
+normalization...
+normalization done
+1 336
+2 10000
+4 10000
+saving:  /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task522_MultPathTest/nnUNetData_plans_v2.1_2D_stage0/BraTS2021_01647_2008.12.11.npz
+no resampling necessary
+no resampling necessary
+before: {'spacing': array([1., 1., 1.]), 'spacing_transposed': array([1., 1., 1.]), 'data.shape (data is transposed)': (4, 141, 170, 138)} 
+after:  {'spacing': array([1., 1., 1.]), 'data.shape (data is resampled)': (4, 141, 170, 138)} 
+
+normalization...
+normalization done
+1 3415
+2 10000
+4 10000
+saving:  /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task522_MultPathTest/nnUNetData_plans_v2.1_2D_stage0/BraTS2021_01630_2008.12.11.npz
+no resampling necessary
+no resampling necessary
+before: {'spacing': array([1., 1., 1.]), 'spacing_transposed': array([1., 1., 1.]), 'data.shape (data is transposed)': (4, 137, 179, 137)} 
+after:  {'spacing': array([1., 1., 1.]), 'data.shape (data is resampled)': (4, 137, 179, 137)} 
+
+normalization...
+normalization done
+1 450
+2 10000
+4 1136
+saving:  /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task522_MultPathTest/nnUNetData_plans_v2.1_2D_stage0/BraTS2021_00155_2008.12.11.npz
+no resampling necessary
+no resampling necessary
+before: {'spacing': array([1., 1., 1.]), 'spacing_transposed': array([1., 1., 1.]), 'data.shape (data is transposed)': (4, 137, 179, 137)} 
+after:  {'spacing': array([1., 1., 1.]), 'data.shape (data is resampled)': (4, 137, 179, 137)} 
+
+normalization...
+normalization done
+1 450
+2 10000
+4 1136
+saving:  /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task522_MultPathTest/nnUNetData_plans_v2.1_2D_stage0/BraTS2021_00155_2008.03.26.npz
+no resampling necessary
+no resampling necessary
+before: {'spacing': array([1., 1., 1.]), 'spacing_transposed': array([1., 1., 1.]), 'data.shape (data is transposed)': (4, 141, 170, 138)} 
+after:  {'spacing': array([1., 1., 1.]), 'data.shape (data is resampled)': (4, 141, 170, 138)} 
+
+normalization...
+normalization done
+1 3415
+2 10000
+4 10000
+saving:  /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task522_MultPathTest/nnUNetData_plans_v2.1_2D_stage0/BraTS2021_01630_2008.03.26.npz
+
+
+Please cite the following paper when using nnUNet:
+
+Isensee, F., Jaeger, P.F., Kohl, S.A.A. et al. "nnU-Net: a self-configuring method for deep learning-based biomedical image segmentation." Nat Methods (2020). https://doi.org/10.1038/s41592-020-01008-z
+
+
+If you have questions or suggestions, feel free to open an issue at https://github.com/MIC-DKFZ/nnUNet
+
+
+##############
+Running Test with thre times fl_setup for three
+#################
+
+Checking postopp_pardir: /raid/edwardsb/projects/RANO/test_data_links_random_times_2
+
+######### CREATING SYMLINKS TO POSTOPP DATA #########
+
+
+#######
+symlinking subject: BraTS2021_00058
+########
+Postopp_data_dirpath: /raid/edwardsb/projects/RANO/test_data_links_random_times_2/data
+
+
+
+
+
+#######
+symlinking subject: BraTS2021_00155
+########
+Postopp_data_dirpath: /raid/edwardsb/projects/RANO/test_data_links_random_times_2/data
+
+
+
+
+
+#######
+symlinking subject: BraTS2021_01630
+########
+Postopp_data_dirpath: /raid/edwardsb/projects/RANO/test_data_links_random_times_2/data
+
+
+
+
+
+#######
+symlinking subject: BraTS2021_01647
+########
+Postopp_data_dirpath: /raid/edwardsb/projects/RANO/test_data_links_random_times_2/data
+
+
+
+
+
+######### GENERATING DATA JSON FILE #########
+
+
+######### OS CALL TO PREPROCESS DATA #########
+
+
+#########
+ Split was performed by timed subject and an error of 0.050000000000000044 was acheived in the percent train target.
+
+###########
+Deleting 2D data directory at: /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task522_MultPathTest/nnUNetData_plans_v2.1_2D_stage0 
+##############
+
+###########
+Starting training for task: Task522_MultPathTest
+
+###############################################
+I am running the following nnUNet: 3d_fullres
+My trainer class is:  <class 'nnunet.training.network_training.nnUNetTrainerV2.nnUNetTrainerV2'>
+For that I will be using the following configuration:
+num_classes:  4
+modalities:  {0: '_0000', 1: '_0001', 2: '_0002', 3: '_0003'}
+use_mask_for_norm OrderedDict([(0, True), (1, True), (2, True), (3, True)])
+keep_only_largest_region None
+min_region_size_per_class None
+min_size_per_class None
+normalization_schemes OrderedDict([(0, 'nonCT'), (1, 'nonCT'), (2, 'nonCT'), (3, 'nonCT')])
+stages...
+
+stage:  0
+{'batch_size': 2, 'num_pool_per_axis': [5, 5, 5], 'patch_size': array([128, 128, 128]), 'median_patient_size_in_voxels': array([139, 170, 138]), 'current_spacing': array([1., 1., 1.]), 'original_spacing': array([1., 1., 1.]), 'do_dummy_2D_data_aug': False, 'pool_op_kernel_sizes': [[2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2]], 'conv_kernel_sizes': [[3, 3, 3], [3, 3, 3], [3, 3, 3], [3, 3, 3], [3, 3, 3], [3, 3, 3]]}
+
+I am using stage 0 from these plans
+I am using sample dice + CE loss
+
+I am using data from this folder:  /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task522_MultPathTest/nnUNetData_plans_v2.1
+###############################################
+loading dataset
+loading all case properties
+2024-06-02 13:01:09.420091: Using splits from existing split file: /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task522_MultPathTest/splits_final.pkl
+2024-06-02 13:01:09.422351: The split file contains 5 splits.
+2024-06-02 13:01:09.422950: Desired fold for training: 0
+2024-06-02 13:01:09.423621: This split has 6 training and 2 validation cases.
+unpacking dataset
+done
+2024-06-02 13:01:11.942994: lr: 0.01
+using pin_memory on device 0
+using pin_memory on device 0
+2024-06-02 13:01:20.196572: Unable to plot network architecture:
+2024-06-02 13:01:20.197751: No module named 'hiddenlayer'
+2024-06-02 13:01:20.198764: 
+printing the network instead:
+
+2024-06-02 13:01:20.199918: Generic_UNet(
+  (conv_blocks_localization): ModuleList(
+    (0): Sequential(
+      (0): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv3d(640, 320, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+            (instnorm): InstanceNorm3d(320, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+      (1): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv3d(320, 320, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+            (instnorm): InstanceNorm3d(320, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+    )
+    (1): Sequential(
+      (0): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv3d(512, 256, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+            (instnorm): InstanceNorm3d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+      (1): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv3d(256, 256, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+            (instnorm): InstanceNorm3d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+    )
+    (2): Sequential(
+      (0): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv3d(256, 128, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+            (instnorm): InstanceNorm3d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+      (1): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv3d(128, 128, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+            (instnorm): InstanceNorm3d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+    )
+    (3): Sequential(
+      (0): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv3d(128, 64, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+            (instnorm): InstanceNorm3d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+      (1): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv3d(64, 64, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+            (instnorm): InstanceNorm3d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+    )
+    (4): Sequential(
+      (0): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv3d(64, 32, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+            (instnorm): InstanceNorm3d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+      (1): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv3d(32, 32, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+            (instnorm): InstanceNorm3d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+    )
+  )
+  (conv_blocks_context): ModuleList(
+    (0): StackedConvLayers(
+      (blocks): Sequential(
+        (0): ConvDropoutNormNonlin(
+          (conv): Conv3d(4, 32, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+          (instnorm): InstanceNorm3d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+          (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+        )
+        (1): ConvDropoutNormNonlin(
+          (conv): Conv3d(32, 32, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+          (instnorm): InstanceNorm3d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+          (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+        )
+      )
+    )
+    (1): StackedConvLayers(
+      (blocks): Sequential(
+        (0): ConvDropoutNormNonlin(
+          (conv): Conv3d(32, 64, kernel_size=(3, 3, 3), stride=(2, 2, 2), padding=(1, 1, 1))
+          (instnorm): InstanceNorm3d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+          (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+        )
+        (1): ConvDropoutNormNonlin(
+          (conv): Conv3d(64, 64, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+          (instnorm): InstanceNorm3d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+          (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+        )
+      )
+    )
+    (2): StackedConvLayers(
+      (blocks): Sequential(
+        (0): ConvDropoutNormNonlin(
+          (conv): Conv3d(64, 128, kernel_size=(3, 3, 3), stride=(2, 2, 2), padding=(1, 1, 1))
+          (instnorm): InstanceNorm3d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+          (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+        )
+        (1): ConvDropoutNormNonlin(
+          (conv): Conv3d(128, 128, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+          (instnorm): InstanceNorm3d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+          (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+        )
+      )
+    )
+    (3): StackedConvLayers(
+      (blocks): Sequential(
+        (0): ConvDropoutNormNonlin(
+          (conv): Conv3d(128, 256, kernel_size=(3, 3, 3), stride=(2, 2, 2), padding=(1, 1, 1))
+          (instnorm): InstanceNorm3d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+          (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+        )
+        (1): ConvDropoutNormNonlin(
+          (conv): Conv3d(256, 256, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+          (instnorm): InstanceNorm3d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+          (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+        )
+      )
+    )
+    (4): StackedConvLayers(
+      (blocks): Sequential(
+        (0): ConvDropoutNormNonlin(
+          (conv): Conv3d(256, 320, kernel_size=(3, 3, 3), stride=(2, 2, 2), padding=(1, 1, 1))
+          (instnorm): InstanceNorm3d(320, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+          (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+        )
+        (1): ConvDropoutNormNonlin(
+          (conv): Conv3d(320, 320, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+          (instnorm): InstanceNorm3d(320, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+          (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+        )
+      )
+    )
+    (5): Sequential(
+      (0): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv3d(320, 320, kernel_size=(3, 3, 3), stride=(2, 2, 2), padding=(1, 1, 1))
+            (instnorm): InstanceNorm3d(320, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+      (1): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv3d(320, 320, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+            (instnorm): InstanceNorm3d(320, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+    )
+  )
+  (td): ModuleList()
+  (tu): ModuleList(
+    (0): ConvTranspose3d(320, 320, kernel_size=(2, 2, 2), stride=(2, 2, 2), bias=False)
+    (1): ConvTranspose3d(320, 256, kernel_size=(2, 2, 2), stride=(2, 2, 2), bias=False)
+    (2): ConvTranspose3d(256, 128, kernel_size=(2, 2, 2), stride=(2, 2, 2), bias=False)
+    (3): ConvTranspose3d(128, 64, kernel_size=(2, 2, 2), stride=(2, 2, 2), bias=False)
+    (4): ConvTranspose3d(64, 32, kernel_size=(2, 2, 2), stride=(2, 2, 2), bias=False)
+  )
+  (seg_outputs): ModuleList(
+    (0): Conv3d(320, 5, kernel_size=(1, 1, 1), stride=(1, 1, 1), bias=False)
+    (1): Conv3d(256, 5, kernel_size=(1, 1, 1), stride=(1, 1, 1), bias=False)
+    (2): Conv3d(128, 5, kernel_size=(1, 1, 1), stride=(1, 1, 1), bias=False)
+    (3): Conv3d(64, 5, kernel_size=(1, 1, 1), stride=(1, 1, 1), bias=False)
+    (4): Conv3d(32, 5, kernel_size=(1, 1, 1), stride=(1, 1, 1), bias=False)
+  )
+)
+
+Please cite the following paper when using nnUNet:
+
+Isensee, F., Jaeger, P.F., Kohl, S.A.A. et al. "nnU-Net: a self-configuring method for deep learning-based biomedical image segmentation." Nat Methods (2020). https://doi.org/10.1038/s41592-020-01008-z
+
+
+If you have questions or suggestions, feel free to open an issue at https://github.com/MIC-DKFZ/nnUNet
+
+Overwriting plans only works for the 3d planner. I am setting '--planner2d' to None. This will skip 2d planning and preprocessing.
+Verifying training set
+checking case BraTS2021_00058_2008.03.26
+checking case BraTS2021_00058_2008.12.11
+checking case BraTS2021_00155_2008.03.26
+checking case BraTS2021_00155_2008.12.11
+checking case BraTS2021_01630_2008.03.26
+checking case BraTS2021_01630_2008.12.11
+checking case BraTS2021_01647_2008.03.26
+checking case BraTS2021_01647_2008.12.11
+Verifying label values
+Expected label values are [0, 1, 2, 3, 4]
+Labels OK
+Dataset OK
+BraTS2021_01630_2008.12.11
+BraTS2021_00058_2008.03.26
+BraTS2021_00058_2008.12.11
+BraTS2021_00155_2008.12.11
+BraTS2021_00155_2008.03.26
+BraTS2021_01647_2008.03.26
+BraTS2021_01630_2008.03.26
+BraTS2021_01647_2008.12.11
+
+
+
+ Task522_MultPathTest
+number of threads:  (8, 8) 
+
+using nonzero mask for normalization
+using nonzero mask for normalization
+using nonzero mask for normalization
+using nonzero mask for normalization
+Are we using the nonzero mask for normalization? OrderedDict([(0, True), (1, True), (2, True), (3, True)])
+the median shape of the dataset is  [139.  169.5 137.5]
+the max shape in the dataset is  [143. 179. 139.]
+the min shape in the dataset is  [137. 159. 133.]
+we don't want feature maps smaller than  4  in the bottleneck
+the transposed median shape of the dataset is  [139.  169.5 137.5]
+generating configuration for 3d_fullres
+{0: {'batch_size': 2, 'num_pool_per_axis': [5, 5, 5], 'patch_size': array([128, 128, 128]), 'median_patient_size_in_voxels': array([139, 170, 138]), 'current_spacing': array([1., 1., 1.]), 'original_spacing': array([1., 1., 1.]), 'do_dummy_2D_data_aug': False, 'pool_op_kernel_sizes': [[2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2]], 'conv_kernel_sizes': [[3, 3, 3], [3, 3, 3], [3, 3, 3], [3, 3, 3], [3, 3, 3], [3, 3, 3]]}}
+transpose forward [0, 1, 2]
+transpose backward [0, 1, 2]
+using nonzero mask for normalization
+using nonzero mask for normalization
+using nonzero mask for normalization
+using nonzero mask for normalization
+Are we using the nonzero mask for normalization? OrderedDict([(0, True), (1, True), (2, True), (3, True)])
+the median shape of the dataset is  [139.  169.5 137.5]
+the max shape in the dataset is  [143. 179. 139.]
+the min shape in the dataset is  [137. 159. 133.]
+we don't want feature maps smaller than  4  in the bottleneck
+the transposed median shape of the dataset is  [139.  169.5 137.5]
+[{'batch_size': 42, 'num_pool_per_axis': [5, 5], 'patch_size': array([192, 160]), 'median_patient_size_in_voxels': array([139, 170, 138]), 'current_spacing': array([1., 1., 1.]), 'original_spacing': array([1., 1., 1.]), 'pool_op_kernel_sizes': [[2, 2], [2, 2], [2, 2], [2, 2], [2, 2]], 'conv_kernel_sizes': [[3, 3], [3, 3], [3, 3], [3, 3], [3, 3], [3, 3]], 'do_dummy_2D_data_aug': False}]
+
+
+Please cite the following paper when using nnUNet:
+
+Isensee, F., Jaeger, P.F., Kohl, S.A.A. et al. "nnU-Net: a self-configuring method for deep learning-based biomedical image segmentation." Nat Methods (2020). https://doi.org/10.1038/s41592-020-01008-z
+
+
+If you have questions or suggestions, feel free to open an issue at https://github.com/MIC-DKFZ/nnUNet
+
+Verifying training set
+checking case BraTS2021_00122_2008.03.26
+checking case BraTS2021_01200_2008.03.26
+checking case BraTS2021_01200_2008.12.11
+checking case BraTS2021_01299_2008.03.26
+checking case BraTS2021_01394_2008.03.26
+Verifying label values
+Expected label values are [0, 1, 2, 3, 4]
+Labels OK
+Dataset OK
+BraTS2021_01200_2008.03.26
+before crop: (4, 155, 240, 240) after crop: (4, 130, 159, 123) spacing: [1. 1. 1.] 
+
+BraTS2021_01299_2008.03.26
+before crop: (4, 155, 240, 240) after crop: (4, 142, 162, 135) spacing: [1. 1. 1.] 
+
+BraTS2021_01200_2008.12.11
+before crop: (4, 155, 240, 240) after crop: (4, 130, 159, 123) spacing: [1. 1. 1.] 
+
+BraTS2021_00122_2008.03.26
+before crop: (4, 155, 240, 240) after crop: (4, 139, 161, 136) spacing: [1. 1. 1.] 
+
+BraTS2021_01394_2008.03.26
+before crop: (4, 155, 240, 240) after crop: (4, 138, 168, 135) spacing: [1. 1. 1.] 
+
+
+
+
+ Task523_MultPathTest
+number of threads:  (8, 8) 
+
+using nonzero mask for normalization
+using nonzero mask for normalization
+using nonzero mask for normalization
+using nonzero mask for normalization
+Are we using the nonzero mask for normalization? OrderedDict([(0, True), (1, True), (2, True), (3, True)])
+the median shape of the dataset is  [138. 161. 135.]
+the max shape in the dataset is  [142. 168. 136.]
+the min shape in the dataset is  [130. 159. 123.]
+we don't want feature maps smaller than  4  in the bottleneck
+the transposed median shape of the dataset is  [138. 161. 135.]
+generating configuration for 3d_fullres
+{0: {'batch_size': 2, 'num_pool_per_axis': [5, 5, 5], 'patch_size': array([128, 128, 128]), 'median_patient_size_in_voxels': array([138, 161, 135]), 'current_spacing': array([1., 1., 1.]), 'original_spacing': array([1., 1., 1.]), 'do_dummy_2D_data_aug': False, 'pool_op_kernel_sizes': [[2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2]], 'conv_kernel_sizes': [[3, 3, 3], [3, 3, 3], [3, 3, 3], [3, 3, 3], [3, 3, 3], [3, 3, 3]]}}
+transpose forward [0, 1, 2]
+transpose backward [0, 1, 2]
+Initializing to run preprocessing
+npz folder: /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_cropped_data/Task523_MultPathTest
+output_folder: /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task523_MultPathTest
+no resampling necessary
+no resampling necessary
+before: {'spacing': array([1., 1., 1.]), 'spacing_transposed': array([1., 1., 1.]), 'data.shape (data is transposed)': (4, 130, 159, 123)} 
+after:  {'spacing': array([1., 1., 1.]), 'data.shape (data is resampled)': (4, 130, 159, 123)} 
+
+1 10000
+2 10000
+4 10000
+saving:  /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task523_MultPathTest/nnUNetData_plans_v2.1_stage0/BraTS2021_01200_2008.12.11.npz
+no resampling necessary
+no resampling necessary
+before: {'spacing': array([1., 1., 1.]), 'spacing_transposed': array([1., 1., 1.]), 'data.shape (data is transposed)': (4, 130, 159, 123)} 
+after:  {'spacing': array([1., 1., 1.]), 'data.shape (data is resampled)': (4, 130, 159, 123)} 
+
+1 10000
+2 10000
+4 10000
+saving:  /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task523_MultPathTest/nnUNetData_plans_v2.1_stage0/BraTS2021_01200_2008.03.26.npz
+no resampling necessary
+no resampling necessary
+before: {'spacing': array([1., 1., 1.]), 'spacing_transposed': array([1., 1., 1.]), 'data.shape (data is transposed)': (4, 139, 161, 136)} 
+after:  {'spacing': array([1., 1., 1.]), 'data.shape (data is resampled)': (4, 139, 161, 136)} 
+
+1 10000
+2 10000
+4 10000
+saving:  /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task523_MultPathTest/nnUNetData_plans_v2.1_stage0/BraTS2021_00122_2008.03.26.npz
+no resampling necessary
+no resampling necessary
+before: {'spacing': array([1., 1., 1.]), 'spacing_transposed': array([1., 1., 1.]), 'data.shape (data is transposed)': (4, 142, 162, 135)} 
+after:  {'spacing': array([1., 1., 1.]), 'data.shape (data is resampled)': (4, 142, 162, 135)} 
+
+1 6056
+2 10000
+4 10000
+saving:  /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task523_MultPathTest/nnUNetData_plans_v2.1_stage0/BraTS2021_01299_2008.03.26.npz
+no resampling necessary
+no resampling necessary
+before: {'spacing': array([1., 1., 1.]), 'spacing_transposed': array([1., 1., 1.]), 'data.shape (data is transposed)': (4, 138, 168, 135)} 
+after:  {'spacing': array([1., 1., 1.]), 'data.shape (data is resampled)': (4, 138, 168, 135)} 
+
+1 317
+2 10000
+4 4409
+saving:  /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task523_MultPathTest/nnUNetData_plans_v2.1_stage0/BraTS2021_01394_2008.03.26.npz
+using nonzero mask for normalization
+using nonzero mask for normalization
+using nonzero mask for normalization
+using nonzero mask for normalization
+Are we using the nonzero mask for normalization? OrderedDict([(0, True), (1, True), (2, True), (3, True)])
+the median shape of the dataset is  [138. 161. 135.]
+the max shape in the dataset is  [142. 168. 136.]
+the min shape in the dataset is  [130. 159. 123.]
+we don't want feature maps smaller than  4  in the bottleneck
+the transposed median shape of the dataset is  [138. 161. 135.]
+[{'batch_size': 24, 'num_pool_per_axis': [5, 5], 'patch_size': array([192, 160]), 'median_patient_size_in_voxels': array([138, 161, 135]), 'current_spacing': array([1., 1., 1.]), 'original_spacing': array([1., 1., 1.]), 'pool_op_kernel_sizes': [[2, 2], [2, 2], [2, 2], [2, 2], [2, 2]], 'conv_kernel_sizes': [[3, 3], [3, 3], [3, 3], [3, 3], [3, 3], [3, 3]], 'do_dummy_2D_data_aug': False}]
+Initializing to run preprocessing
+npz folder: /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_cropped_data/Task523_MultPathTest
+output_folder: /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task523_MultPathTest
+no resampling necessary
+no resampling necessary
+before: {'spacing': array([1., 1., 1.]), 'spacing_transposed': array([1., 1., 1.]), 'data.shape (data is transposed)': (4, 130, 159, 123)} 
+after:  {'spacing': array([1., 1., 1.]), 'data.shape (data is resampled)': (4, 130, 159, 123)} 
+
+normalization...
+normalization done
+1 10000
+2 10000
+4 10000
+saving:  /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task523_MultPathTest/nnUNetData_plans_v2.1_2D_stage0/BraTS2021_01200_2008.03.26.npz
+no resampling necessary
+no resampling necessary
+before: {'spacing': array([1., 1., 1.]), 'spacing_transposed': array([1., 1., 1.]), 'data.shape (data is transposed)': (4, 130, 159, 123)} 
+after:  {'spacing': array([1., 1., 1.]), 'data.shape (data is resampled)': (4, 130, 159, 123)} 
+
+normalization...
+normalization done
+1 10000
+2 10000
+4 10000
+saving:  /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task523_MultPathTest/nnUNetData_plans_v2.1_2D_stage0/BraTS2021_01200_2008.12.11.npz
+no resampling necessary
+no resampling necessary
+before: {'spacing': array([1., 1., 1.]), 'spacing_transposed': array([1., 1., 1.]), 'data.shape (data is transposed)': (4, 142, 162, 135)} 
+after:  {'spacing': array([1., 1., 1.]), 'data.shape (data is resampled)': (4, 142, 162, 135)} 
+
+normalization...
+normalization done
+1 6056
+2 10000
+4 10000
+saving:  /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task523_MultPathTest/nnUNetData_plans_v2.1_2D_stage0/BraTS2021_01299_2008.03.26.npz
+no resampling necessary
+no resampling necessary
+before: {'spacing': array([1., 1., 1.]), 'spacing_transposed': array([1., 1., 1.]), 'data.shape (data is transposed)': (4, 138, 168, 135)} 
+after:  {'spacing': array([1., 1., 1.]), 'data.shape (data is resampled)': (4, 138, 168, 135)} 
+
+normalization...
+normalization done
+1 317
+2 10000
+4 4409
+saving:  /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task523_MultPathTest/nnUNetData_plans_v2.1_2D_stage0/BraTS2021_01394_2008.03.26.npz
+no resampling necessary
+no resampling necessary
+before: {'spacing': array([1., 1., 1.]), 'spacing_transposed': array([1., 1., 1.]), 'data.shape (data is transposed)': (4, 139, 161, 136)} 
+after:  {'spacing': array([1., 1., 1.]), 'data.shape (data is resampled)': (4, 139, 161, 136)} 
+
+normalization...
+normalization done
+1 10000
+2 10000
+4 10000
+saving:  /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task523_MultPathTest/nnUNetData_plans_v2.1_2D_stage0/BraTS2021_00122_2008.03.26.npz
+
+
+Please cite the following paper when using nnUNet:
+
+Isensee, F., Jaeger, P.F., Kohl, S.A.A. et al. "nnU-Net: a self-configuring method for deep learning-based biomedical image segmentation." Nat Methods (2020). https://doi.org/10.1038/s41592-020-01008-z
+
+
+If you have questions or suggestions, feel free to open an issue at https://github.com/MIC-DKFZ/nnUNet
+
+Overwriting plans only works for the 3d planner. I am setting '--planner2d' to None. This will skip 2d planning and preprocessing.
+BraTS2021_00122_2008.03.26
+BraTS2021_01200_2008.03.26
+BraTS2021_01200_2008.12.11
+BraTS2021_01299_2008.03.26
+BraTS2021_01394_2008.03.26
+
+
+
+ Task523_MultPathTest
+number of threads:  (8, 8) 
+
+using nonzero mask for normalization
+using nonzero mask for normalization
+using nonzero mask for normalization
+using nonzero mask for normalization
+Are we using the nonzero mask for normalization? OrderedDict([(0, True), (1, True), (2, True), (3, True)])
+the median shape of the dataset is  [138. 161. 135.]
+the max shape in the dataset is  [142. 168. 136.]
+the min shape in the dataset is  [130. 159. 123.]
+we don't want feature maps smaller than  4  in the bottleneck
+the transposed median shape of the dataset is  [138. 161. 135.]
+generating configuration for 3d_fullres
+{0: {'batch_size': 2, 'num_pool_per_axis': [5, 5, 5], 'patch_size': array([128, 128, 128]), 'median_patient_size_in_voxels': array([138, 161, 135]), 'current_spacing': array([1., 1., 1.]), 'original_spacing': array([1., 1., 1.]), 'do_dummy_2D_data_aug': False, 'pool_op_kernel_sizes': [[2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2]], 'conv_kernel_sizes': [[3, 3, 3], [3, 3, 3], [3, 3, 3], [3, 3, 3], [3, 3, 3], [3, 3, 3]]}}
+transpose forward [0, 1, 2]
+transpose backward [0, 1, 2]
+using nonzero mask for normalization
+using nonzero mask for normalization
+using nonzero mask for normalization
+using nonzero mask for normalization
+Are we using the nonzero mask for normalization? OrderedDict([(0, True), (1, True), (2, True), (3, True)])
+the median shape of the dataset is  [138. 161. 135.]
+the max shape in the dataset is  [142. 168. 136.]
+the min shape in the dataset is  [130. 159. 123.]
+we don't want feature maps smaller than  4  in the bottleneck
+the transposed median shape of the dataset is  [138. 161. 135.]
+[{'batch_size': 24, 'num_pool_per_axis': [5, 5], 'patch_size': array([192, 160]), 'median_patient_size_in_voxels': array([138, 161, 135]), 'current_spacing': array([1., 1., 1.]), 'original_spacing': array([1., 1., 1.]), 'pool_op_kernel_sizes': [[2, 2], [2, 2], [2, 2], [2, 2], [2, 2]], 'conv_kernel_sizes': [[3, 3], [3, 3], [3, 3], [3, 3], [3, 3], [3, 3]], 'do_dummy_2D_data_aug': False}]
+
+
+Please cite the following paper when using nnUNet:
+
+Isensee, F., Jaeger, P.F., Kohl, S.A.A. et al. "nnU-Net: a self-configuring method for deep learning-based biomedical image segmentation." Nat Methods (2020). https://doi.org/10.1038/s41592-020-01008-z
+
+
+If you have questions or suggestions, feel free to open an issue at https://github.com/MIC-DKFZ/nnUNet
+
+Verifying training set
+checking case BraTS2021_00468_2008.03.26
+checking case BraTS2021_00512_2008.03.26
+checking case BraTS2021_00512_2008.12.11
+checking case BraTS2021_00565_2008.03.26
+checking case BraTS2021_01277_2008.03.26
+Verifying label values
+Expected label values are [0, 1, 2, 3, 4]
+Labels OK
+Dataset OK
+BraTS2021_00468_2008.03.26
+before crop: (4, 155, 240, 240) after crop: (4, 144, 169, 133) spacing: [1. 1. 1.] 
+
+BraTS2021_00512_2008.12.11
+before crop: (4, 155, 240, 240) after crop: (4, 136, 171, 130) spacing: [1. 1. 1.] 
+
+BraTS2021_00512_2008.03.26
+before crop: (4, 155, 240, 240) after crop: (4, 136, 171, 130) spacing: [1. 1. 1.] 
+
+BraTS2021_00565_2008.03.26
+before crop: (4, 155, 240, 240) after crop: (4, 137, 173, 128) spacing: [1. 1. 1.] 
+
+BraTS2021_01277_2008.03.26
+before crop: (4, 155, 240, 240) after crop: (4, 141, 176, 141) spacing: [1. 1. 1.] 
+
+
+
+
+ Task524_MultPathTest
+number of threads:  (8, 8) 
+
+using nonzero mask for normalization
+using nonzero mask for normalization
+using nonzero mask for normalization
+using nonzero mask for normalization
+Are we using the nonzero mask for normalization? OrderedDict([(0, True), (1, True), (2, True), (3, True)])
+the median shape of the dataset is  [137. 171. 130.]
+the max shape in the dataset is  [144. 176. 141.]
+the min shape in the dataset is  [136. 169. 128.]
+we don't want feature maps smaller than  4  in the bottleneck
+the transposed median shape of the dataset is  [137. 171. 130.]
+generating configuration for 3d_fullres
+{0: {'batch_size': 2, 'num_pool_per_axis': [5, 5, 4], 'patch_size': array([128, 160, 112]), 'median_patient_size_in_voxels': array([137, 171, 130]), 'current_spacing': array([1., 1., 1.]), 'original_spacing': array([1., 1., 1.]), 'do_dummy_2D_data_aug': False, 'pool_op_kernel_sizes': [[2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 1]], 'conv_kernel_sizes': [[3, 3, 3], [3, 3, 3], [3, 3, 3], [3, 3, 3], [3, 3, 3], [3, 3, 3]]}}
+transpose forward [0, 1, 2]
+transpose backward [0, 1, 2]
+Initializing to run preprocessing
+npz folder: /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_cropped_data/Task524_MultPathTest
+output_folder: /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task524_MultPathTest
+no resampling necessary
+no resampling necessary
+before: {'spacing': array([1., 1., 1.]), 'spacing_transposed': array([1., 1., 1.]), 'data.shape (data is transposed)': (4, 136, 171, 130)} 
+after:  {'spacing': array([1., 1., 1.]), 'data.shape (data is resampled)': (4, 136, 171, 130)} 
+
+1 10000
+2 10000
+4 10000
+saving:  /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task524_MultPathTest/nnUNetData_plans_v2.1_stage0/BraTS2021_00512_2008.12.11.npz
+no resampling necessary
+no resampling necessary
+before: {'spacing': array([1., 1., 1.]), 'spacing_transposed': array([1., 1., 1.]), 'data.shape (data is transposed)': (4, 136, 171, 130)} 
+after:  {'spacing': array([1., 1., 1.]), 'data.shape (data is resampled)': (4, 136, 171, 130)} 
+
+1 10000
+2 10000
+4 10000
+saving:  /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task524_MultPathTest/nnUNetData_plans_v2.1_stage0/BraTS2021_00512_2008.03.26.npz
+no resampling necessary
+no resampling necessary
+before: {'spacing': array([1., 1., 1.]), 'spacing_transposed': array([1., 1., 1.]), 'data.shape (data is transposed)': (4, 144, 169, 133)} 
+after:  {'spacing': array([1., 1., 1.]), 'data.shape (data is resampled)': (4, 144, 169, 133)} 
+
+1 10000
+2 10000
+4 10000
+saving:  /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task524_MultPathTest/nnUNetData_plans_v2.1_stage0/BraTS2021_00468_2008.03.26.npz
+no resampling necessary
+no resampling necessary
+before: {'spacing': array([1., 1., 1.]), 'spacing_transposed': array([1., 1., 1.]), 'data.shape (data is transposed)': (4, 141, 176, 141)} 
+after:  {'spacing': array([1., 1., 1.]), 'data.shape (data is resampled)': (4, 141, 176, 141)} 
+
+1 3391
+2 10000
+4 7167
+saving:  /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task524_MultPathTest/nnUNetData_plans_v2.1_stage0/BraTS2021_01277_2008.03.26.npz
+no resampling necessary
+no resampling necessary
+before: {'spacing': array([1., 1., 1.]), 'spacing_transposed': array([1., 1., 1.]), 'data.shape (data is transposed)': (4, 137, 173, 128)} 
+after:  {'spacing': array([1., 1., 1.]), 'data.shape (data is resampled)': (4, 137, 173, 128)} 
+
+1 8106
+2 10000
+4 10000
+saving:  /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task524_MultPathTest/nnUNetData_plans_v2.1_stage0/BraTS2021_00565_2008.03.26.npz
+using nonzero mask for normalization
+using nonzero mask for normalization
+using nonzero mask for normalization
+using nonzero mask for normalization
+Are we using the nonzero mask for normalization? OrderedDict([(0, True), (1, True), (2, True), (3, True)])
+the median shape of the dataset is  [137. 171. 130.]
+the max shape in the dataset is  [144. 176. 141.]
+the min shape in the dataset is  [136. 169. 128.]
+we don't want feature maps smaller than  4  in the bottleneck
+the transposed median shape of the dataset is  [137. 171. 130.]
+[{'batch_size': 25, 'num_pool_per_axis': [5, 5], 'patch_size': array([192, 160]), 'median_patient_size_in_voxels': array([137, 171, 130]), 'current_spacing': array([1., 1., 1.]), 'original_spacing': array([1., 1., 1.]), 'pool_op_kernel_sizes': [[2, 2], [2, 2], [2, 2], [2, 2], [2, 2]], 'conv_kernel_sizes': [[3, 3], [3, 3], [3, 3], [3, 3], [3, 3], [3, 3]], 'do_dummy_2D_data_aug': False}]
+Initializing to run preprocessing
+npz folder: /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_cropped_data/Task524_MultPathTest
+output_folder: /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task524_MultPathTest
+no resampling necessary
+no resampling necessary
+before: {'spacing': array([1., 1., 1.]), 'spacing_transposed': array([1., 1., 1.]), 'data.shape (data is transposed)': (4, 136, 171, 130)} 
+after:  {'spacing': array([1., 1., 1.]), 'data.shape (data is resampled)': (4, 136, 171, 130)} 
+
+normalization...
+normalization done
+1 10000
+2 10000
+4 10000
+saving:  /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task524_MultPathTest/nnUNetData_plans_v2.1_2D_stage0/BraTS2021_00512_2008.12.11.npz
+no resampling necessary
+no resampling necessary
+before: {'spacing': array([1., 1., 1.]), 'spacing_transposed': array([1., 1., 1.]), 'data.shape (data is transposed)': (4, 144, 169, 133)} 
+after:  {'spacing': array([1., 1., 1.]), 'data.shape (data is resampled)': (4, 144, 169, 133)} 
+
+normalization...
+normalization done
+1 10000
+2 10000
+4 10000
+saving:  /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task524_MultPathTest/nnUNetData_plans_v2.1_2D_stage0/BraTS2021_00468_2008.03.26.npz
+no resampling necessary
+no resampling necessary
+before: {'spacing': array([1., 1., 1.]), 'spacing_transposed': array([1., 1., 1.]), 'data.shape (data is transposed)': (4, 141, 176, 141)} 
+after:  {'spacing': array([1., 1., 1.]), 'data.shape (data is resampled)': (4, 141, 176, 141)} 
+
+normalization...
+normalization done
+1 3391
+2 10000
+4 7167
+saving:  /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task524_MultPathTest/nnUNetData_plans_v2.1_2D_stage0/BraTS2021_01277_2008.03.26.npz
+no resampling necessary
+no resampling necessary
+before: {'spacing': array([1., 1., 1.]), 'spacing_transposed': array([1., 1., 1.]), 'data.shape (data is transposed)': (4, 136, 171, 130)} 
+after:  {'spacing': array([1., 1., 1.]), 'data.shape (data is resampled)': (4, 136, 171, 130)} 
+
+normalization...
+normalization done
+1 10000
+2 10000
+4 10000
+saving:  /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task524_MultPathTest/nnUNetData_plans_v2.1_2D_stage0/BraTS2021_00512_2008.03.26.npz
+no resampling necessary
+no resampling necessary
+before: {'spacing': array([1., 1., 1.]), 'spacing_transposed': array([1., 1., 1.]), 'data.shape (data is transposed)': (4, 137, 173, 128)} 
+after:  {'spacing': array([1., 1., 1.]), 'data.shape (data is resampled)': (4, 137, 173, 128)} 
+
+normalization...
+normalization done
+1 8106
+2 10000
+4 10000
+saving:  /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task524_MultPathTest/nnUNetData_plans_v2.1_2D_stage0/BraTS2021_00565_2008.03.26.npz
+
+
+Please cite the following paper when using nnUNet:
+
+Isensee, F., Jaeger, P.F., Kohl, S.A.A. et al. "nnU-Net: a self-configuring method for deep learning-based biomedical image segmentation." Nat Methods (2020). https://doi.org/10.1038/s41592-020-01008-z
+
+
+If you have questions or suggestions, feel free to open an issue at https://github.com/MIC-DKFZ/nnUNet
+
+Overwriting plans only works for the 3d planner. I am setting '--planner2d' to None. This will skip 2d planning and preprocessing.
+BraTS2021_00468_2008.03.26
+BraTS2021_00512_2008.12.11
+BraTS2021_00512_2008.03.26
+BraTS2021_00565_2008.03.26
+BraTS2021_01277_2008.03.26
+
+
+
+ Task524_MultPathTest
+number of threads:  (8, 8) 
+
+using nonzero mask for normalization
+using nonzero mask for normalization
+using nonzero mask for normalization
+using nonzero mask for normalization
+Are we using the nonzero mask for normalization? OrderedDict([(0, True), (1, True), (2, True), (3, True)])
+the median shape of the dataset is  [137. 171. 130.]
+the max shape in the dataset is  [144. 176. 141.]
+the min shape in the dataset is  [136. 169. 128.]
+we don't want feature maps smaller than  4  in the bottleneck
+the transposed median shape of the dataset is  [137. 171. 130.]
+generating configuration for 3d_fullres
+{0: {'batch_size': 2, 'num_pool_per_axis': [5, 5, 4], 'patch_size': array([128, 160, 112]), 'median_patient_size_in_voxels': array([137, 171, 130]), 'current_spacing': array([1., 1., 1.]), 'original_spacing': array([1., 1., 1.]), 'do_dummy_2D_data_aug': False, 'pool_op_kernel_sizes': [[2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 1]], 'conv_kernel_sizes': [[3, 3, 3], [3, 3, 3], [3, 3, 3], [3, 3, 3], [3, 3, 3], [3, 3, 3]]}}
+transpose forward [0, 1, 2]
+transpose backward [0, 1, 2]
+using nonzero mask for normalization
+using nonzero mask for normalization
+using nonzero mask for normalization
+using nonzero mask for normalization
+Are we using the nonzero mask for normalization? OrderedDict([(0, True), (1, True), (2, True), (3, True)])
+the median shape of the dataset is  [137. 171. 130.]
+the max shape in the dataset is  [144. 176. 141.]
+the min shape in the dataset is  [136. 169. 128.]
+we don't want feature maps smaller than  4  in the bottleneck
+the transposed median shape of the dataset is  [137. 171. 130.]
+[{'batch_size': 25, 'num_pool_per_axis': [5, 5], 'patch_size': array([192, 160]), 'median_patient_size_in_voxels': array([137, 171, 130]), 'current_spacing': array([1., 1., 1.]), 'original_spacing': array([1., 1., 1.]), 'pool_op_kernel_sizes': [[2, 2], [2, 2], [2, 2], [2, 2], [2, 2]], 'conv_kernel_sizes': [[3, 3], [3, 3], [3, 3], [3, 3], [3, 3], [3, 3]], 'do_dummy_2D_data_aug': False}]
+
+2024-06-02 13:01:20.212343: 
+
+2024-06-02 13:01:20.213342: 
+epoch:  0
+2024-06-02 13:08:00.561367: train loss : -0.1741
+2024-06-02 13:08:19.306733: validation loss: -0.1228
+2024-06-02 13:08:19.308455: Average global foreground Dice: [0.0, 0.6851, 0.0, 0.1112]
+2024-06-02 13:08:19.309231: (interpret this as an estimate for the Dice of the different classes. This is not exact.)
+2024-06-02 13:08:19.685179: lr: 0.009991
+2024-06-02 13:08:19.685858: This epoch took 419.471963 s
+
+2024-06-02 13:08:19.759704: saving checkpoint to /raid/edwardsb/projects/RANO/NNUnetModels/nnUNet/3d_fullres/Task522_MultPathTest/nnUNetTrainerV2__nnUNetPlansv2.1/fold_0/model_final_checkpoint.model...
+2024-06-02 13:08:20.331481: done, saving took 0.64 seconds
+
+######### WRITING MODEL, MODEL INFO, and PLANS #########
+col_paths were: {'initial_model_path': '/raid/edwardsb/projects/RANO/NNUnetModels/nnUNet/3d_fullres/Task522_MultPathTest/nnUNetTrainerV2__nnUNetPlans_pretrained_POSTOPP/fold_0/model_initial_checkpoint.model', 'final_model_path': '/raid/edwardsb/projects/RANO/NNUnetModels/nnUNet/3d_fullres/Task522_MultPathTest/nnUNetTrainerV2__nnUNetPlans_pretrained_POSTOPP/fold_0/model_final_checkpoint.model', 'initial_model_info_path': '/raid/edwardsb/projects/RANO/NNUnetModels/nnUNet/3d_fullres/Task522_MultPathTest/nnUNetTrainerV2__nnUNetPlans_pretrained_POSTOPP/fold_0/model_initial_checkpoint.model.pkl', 'final_model_info_path': '/raid/edwardsb/projects/RANO/NNUnetModels/nnUNet/3d_fullres/Task522_MultPathTest/nnUNetTrainerV2__nnUNetPlans_pretrained_POSTOPP/fold_0/model_final_checkpoint.model.pkl', 'plans_path': '/raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task522_MultPathTest/nnUNetPlans_pretrained_POSTOPP_plans_3D.pkl'}
+
+
+
+###   ###   ###   ###   ###   ###   ###
+
+A MODEL HAS TRAINED. HERE ARE PATHS WHERE FILES CAN BE OBTAINED:
+
+initial_model_path: /raid/edwardsb/projects/RANO/NNUnetModels/nnUNet/3d_fullres/Task522_MultPathTest/nnUNetTrainerV2__nnUNetPlans_pretrained_POSTOPP/fold_0/model_initial_checkpoint.model
+initial_model_info_path: /raid/edwardsb/projects/RANO/NNUnetModels/nnUNet/3d_fullres/Task522_MultPathTest/nnUNetTrainerV2__nnUNetPlans_pretrained_POSTOPP/fold_0/model_initial_checkpoint.model.pkl
+final_model_path: /raid/edwardsb/projects/RANO/NNUnetModels/nnUNet/3d_fullres/Task522_MultPathTest/nnUNetTrainerV2__nnUNetPlans_pretrained_POSTOPP/fold_0/model_final_checkpoint.model
+final_model_info_path: /raid/edwardsb/projects/RANO/NNUnetModels/nnUNet/3d_fullres/Task522_MultPathTest/nnUNetTrainerV2__nnUNetPlans_pretrained_POSTOPP/fold_0/model_final_checkpoint.model.pkl
+plans_path: /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task522_MultPathTest/nnUNetPlans_pretrained_POSTOPP_plans_3D.pkl
+
+###   ###   ###   ###   ###   ###   ###
+
+
+######### CREATING SYMLINKS TO POSTOPP DATA #########
+
+
+######### GENERATING DATA JSON FILE #########
+
+
+######### OS CALL TO PREPROCESS DATA #########
+
+
+###########
+Deleting 2D data directory at: /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task523_MultPathTest/nnUNetData_plans_v2.1_2D_stage0 
+##############
+
+
+######### WRITING MODEL, MODEL INFO, and PLANS #########
+col_paths were: {'initial_model_path': '/raid/edwardsb/projects/RANO/NNUnetModels/nnUNet/3d_fullres/Task523_MultPathTest/nnUNetTrainerV2__nnUNetPlans_pretrained_POSTOPP/fold_0/model_initial_checkpoint.model', 'final_model_path': '/raid/edwardsb/projects/RANO/NNUnetModels/nnUNet/3d_fullres/Task523_MultPathTest/nnUNetTrainerV2__nnUNetPlans_pretrained_POSTOPP/fold_0/model_final_checkpoint.model', 'initial_model_info_path': '/raid/edwardsb/projects/RANO/NNUnetModels/nnUNet/3d_fullres/Task523_MultPathTest/nnUNetTrainerV2__nnUNetPlans_pretrained_POSTOPP/fold_0/model_initial_checkpoint.model.pkl', 'final_model_info_path': '/raid/edwardsb/projects/RANO/NNUnetModels/nnUNet/3d_fullres/Task523_MultPathTest/nnUNetTrainerV2__nnUNetPlans_pretrained_POSTOPP/fold_0/model_final_checkpoint.model.pkl', 'plans_path': '/raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task523_MultPathTest/nnUNetPlans_pretrained_POSTOPP_plans_3D.pkl'}
+
+
+
+######### CREATING SYMLINKS TO POSTOPP DATA #########
+
+
+######### GENERATING DATA JSON FILE #########
+
+
+######### OS CALL TO PREPROCESS DATA #########
+
+
+###########
+Deleting 2D data directory at: /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task524_MultPathTest/nnUNetData_plans_v2.1_2D_stage0 
+##############
+
+
+######### WRITING MODEL, MODEL INFO, and PLANS #########
+col_paths were: {'initial_model_path': '/raid/edwardsb/projects/RANO/NNUnetModels/nnUNet/3d_fullres/Task524_MultPathTest/nnUNetTrainerV2__nnUNetPlans_pretrained_POSTOPP/fold_0/model_initial_checkpoint.model', 'final_model_path': '/raid/edwardsb/projects/RANO/NNUnetModels/nnUNet/3d_fullres/Task524_MultPathTest/nnUNetTrainerV2__nnUNetPlans_pretrained_POSTOPP/fold_0/model_final_checkpoint.model', 'initial_model_info_path': '/raid/edwardsb/projects/RANO/NNUnetModels/nnUNet/3d_fullres/Task524_MultPathTest/nnUNetTrainerV2__nnUNetPlans_pretrained_POSTOPP/fold_0/model_initial_checkpoint.model.pkl', 'final_model_info_path': '/raid/edwardsb/projects/RANO/NNUnetModels/nnUNet/3d_fullres/Task524_MultPathTest/nnUNetTrainerV2__nnUNetPlans_pretrained_POSTOPP/fold_0/model_final_checkpoint.model.pkl', 'plans_path': '/raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task524_MultPathTest/nnUNetPlans_pretrained_POSTOPP_plans_3D.pkl'}
+
+
+###########
+Starting training for task: Task522_MultPathTest
+
+###############################################
+I am running the following nnUNet: 3d_fullres
+My trainer class is:  <class 'nnunet.training.network_training.nnUNetTrainerV2.nnUNetTrainerV2'>
+For that I will be using the following configuration:
+num_classes:  4
+modalities:  {0: '_0000', 1: '_0001', 2: '_0002', 3: '_0003'}
+use_mask_for_norm OrderedDict([(0, True), (1, True), (2, True), (3, True)])
+keep_only_largest_region None
+min_region_size_per_class None
+min_size_per_class None
+normalization_schemes OrderedDict([(0, 'nonCT'), (1, 'nonCT'), (2, 'nonCT'), (3, 'nonCT')])
+stages...
+
+stage:  0
+{'batch_size': 2, 'num_pool_per_axis': [5, 5, 5], 'patch_size': array([128, 128, 128]), 'median_patient_size_in_voxels': array([139, 170, 138]), 'current_spacing': array([1., 1., 1.]), 'original_spacing': array([1., 1., 1.]), 'do_dummy_2D_data_aug': False, 'pool_op_kernel_sizes': [[2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2]], 'conv_kernel_sizes': [[3, 3, 3], [3, 3, 3], [3, 3, 3], [3, 3, 3], [3, 3, 3], [3, 3, 3]]}
+
+I am using stage 0 from these plans
+I am using sample dice + CE loss
+
+I am using data from this folder:  /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task522_MultPathTest/nnUNetData_plans_v2.1
+###############################################
+loading dataset
+loading all case properties
+2024-06-02 13:09:03.556256: Using splits from existing split file: /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task522_MultPathTest/splits_final.pkl
+2024-06-02 13:09:03.563983: The split file contains 5 splits.
+2024-06-02 13:09:03.564643: Desired fold for training: 0
+2024-06-02 13:09:03.565270: This split has 6 training and 2 validation cases.
+unpacking dataset
+done
+2024-06-02 13:09:04.204794: loading checkpoint /raid/edwardsb/projects/RANO/NNUnetModels/nnUNet/3d_fullres/Task522_MultPathTest/nnUNetTrainerV2__nnUNetPlans_pretrained_POSTOPP/fold_0/model_final_checkpoint.model train= True
+2024-06-02 13:09:04.407336: lr: 0.009991
+using pin_memory on device 0
+using pin_memory on device 0
+2024-06-02 13:09:07.554632: Unable to plot network architecture:
+2024-06-02 13:09:07.555887: No module named 'hiddenlayer'
+2024-06-02 13:09:07.556432: 
+printing the network instead:
+
+2024-06-02 13:09:07.557023: Generic_UNet(
+  (conv_blocks_localization): ModuleList(
+    (0): Sequential(
+      (0): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv3d(640, 320, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+            (instnorm): InstanceNorm3d(320, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+      (1): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv3d(320, 320, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+            (instnorm): InstanceNorm3d(320, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+    )
+    (1): Sequential(
+      (0): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv3d(512, 256, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+            (instnorm): InstanceNorm3d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+      (1): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv3d(256, 256, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+            (instnorm): InstanceNorm3d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+    )
+    (2): Sequential(
+      (0): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv3d(256, 128, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+            (instnorm): InstanceNorm3d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+      (1): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv3d(128, 128, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+            (instnorm): InstanceNorm3d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+    )
+    (3): Sequential(
+      (0): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv3d(128, 64, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+            (instnorm): InstanceNorm3d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+      (1): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv3d(64, 64, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+            (instnorm): InstanceNorm3d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+    )
+    (4): Sequential(
+      (0): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv3d(64, 32, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+            (instnorm): InstanceNorm3d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+      (1): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv3d(32, 32, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+            (instnorm): InstanceNorm3d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+    )
+  )
+  (conv_blocks_context): ModuleList(
+    (0): StackedConvLayers(
+      (blocks): Sequential(
+        (0): ConvDropoutNormNonlin(
+          (conv): Conv3d(4, 32, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+          (instnorm): InstanceNorm3d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+          (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+        )
+        (1): ConvDropoutNormNonlin(
+          (conv): Conv3d(32, 32, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+          (instnorm): InstanceNorm3d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+          (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+        )
+      )
+    )
+    (1): StackedConvLayers(
+      (blocks): Sequential(
+        (0): ConvDropoutNormNonlin(
+          (conv): Conv3d(32, 64, kernel_size=(3, 3, 3), stride=(2, 2, 2), padding=(1, 1, 1))
+          (instnorm): InstanceNorm3d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+          (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+        )
+        (1): ConvDropoutNormNonlin(
+          (conv): Conv3d(64, 64, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+          (instnorm): InstanceNorm3d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+          (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+        )
+      )
+    )
+    (2): StackedConvLayers(
+      (blocks): Sequential(
+        (0): ConvDropoutNormNonlin(
+          (conv): Conv3d(64, 128, kernel_size=(3, 3, 3), stride=(2, 2, 2), padding=(1, 1, 1))
+          (instnorm): InstanceNorm3d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+          (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+        )
+        (1): ConvDropoutNormNonlin(
+          (conv): Conv3d(128, 128, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+          (instnorm): InstanceNorm3d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+          (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+        )
+      )
+    )
+    (3): StackedConvLayers(
+      (blocks): Sequential(
+        (0): ConvDropoutNormNonlin(
+          (conv): Conv3d(128, 256, kernel_size=(3, 3, 3), stride=(2, 2, 2), padding=(1, 1, 1))
+          (instnorm): InstanceNorm3d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+          (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+        )
+        (1): ConvDropoutNormNonlin(
+          (conv): Conv3d(256, 256, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+          (instnorm): InstanceNorm3d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+          (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+        )
+      )
+    )
+    (4): StackedConvLayers(
+      (blocks): Sequential(
+        (0): ConvDropoutNormNonlin(
+          (conv): Conv3d(256, 320, kernel_size=(3, 3, 3), stride=(2, 2, 2), padding=(1, 1, 1))
+          (instnorm): InstanceNorm3d(320, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+          (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+        )
+        (1): ConvDropoutNormNonlin(
+          (conv): Conv3d(320, 320, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+          (instnorm): InstanceNorm3d(320, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+          (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+        )
+      )
+    )
+    (5): Sequential(
+      (0): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv3d(320, 320, kernel_size=(3, 3, 3), stride=(2, 2, 2), padding=(1, 1, 1))
+            (instnorm): InstanceNorm3d(320, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+      (1): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv3d(320, 320, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+            (instnorm): InstanceNorm3d(320, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+    )
+  )
+  (td): ModuleList()
+  (tu): ModuleList(
+    (0): ConvTranspose3d(320, 320, kernel_size=(2, 2, 2), stride=(2, 2, 2), bias=False)
+    (1): ConvTranspose3d(320, 256, kernel_size=(2, 2, 2), stride=(2, 2, 2), bias=False)
+    (2): ConvTranspose3d(256, 128, kernel_size=(2, 2, 2), stride=(2, 2, 2), bias=False)
+    (3): ConvTranspose3d(128, 64, kernel_size=(2, 2, 2), stride=(2, 2, 2), bias=False)
+    (4): ConvTranspose3d(64, 32, kernel_size=(2, 2, 2), stride=(2, 2, 2), bias=False)
+  )
+  (seg_outputs): ModuleList(
+    (0): Conv3d(320, 5, kernel_size=(1, 1, 1), stride=(1, 1, 1), bias=False)
+    (1): Conv3d(256, 5, kernel_size=(1, 1, 1), stride=(1, 1, 1), bias=False)
+    (2): Conv3d(128, 5, kernel_size=(1, 1, 1), stride=(1, 1, 1), bias=False)
+    (3): Conv3d(64, 5, kernel_size=(1, 1, 1), stride=(1, 1, 1), bias=False)
+    (4): Conv3d(32, 5, kernel_size=(1, 1, 1), stride=(1, 1, 1), bias=False)
+  )
+)
+2024-06-02 13:09:07.561899: 
+
+2024-06-02 13:09:07.562778: 
+epoch:  1
+2024-06-02 13:14:13.909155: train loss : -0.6048
+2024-06-02 13:14:32.826026: validation loss: -0.2121
+2024-06-02 13:14:32.828562: Average global foreground Dice: [0.0, 0.7296, 0.0984]
+2024-06-02 13:14:32.829489: (interpret this as an estimate for the Dice of the different classes. This is not exact.)
+2024-06-02 13:14:33.276216: lr: 0.009982
+2024-06-02 13:14:33.277076: This epoch took 325.713752 s
+
+2024-06-02 13:14:33.359200: saving checkpoint to /raid/edwardsb/projects/RANO/NNUnetModels/nnUNet/3d_fullres/Task522_MultPathTest/nnUNetTrainerV2__nnUNetPlans_pretrained_POSTOPP/fold_0/model_final_checkpoint.model...
+2024-06-02 13:14:33.951808: done, saving took 0.67 seconds
+###########
+Starting training for task: Task523_MultPathTest
+
+###############################################
+I am running the following nnUNet: 3d_fullres
+My trainer class is:  <class 'nnunet.training.network_training.nnUNetTrainerV2.nnUNetTrainerV2'>
+For that I will be using the following configuration:
+num_classes:  4
+modalities:  {0: '_0000', 1: '_0001', 2: '_0002', 3: '_0003'}
+use_mask_for_norm OrderedDict([(0, True), (1, True), (2, True), (3, True)])
+keep_only_largest_region None
+min_region_size_per_class None
+min_size_per_class None
+normalization_schemes OrderedDict([(0, 'nonCT'), (1, 'nonCT'), (2, 'nonCT'), (3, 'nonCT')])
+stages...
+
+stage:  0
+{'batch_size': 2, 'num_pool_per_axis': [5, 5, 5], 'patch_size': array([128, 128, 128]), 'median_patient_size_in_voxels': array([139, 170, 138]), 'current_spacing': array([1., 1., 1.]), 'original_spacing': array([1., 1., 1.]), 'do_dummy_2D_data_aug': False, 'pool_op_kernel_sizes': [[2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2]], 'conv_kernel_sizes': [[3, 3, 3], [3, 3, 3], [3, 3, 3], [3, 3, 3], [3, 3, 3], [3, 3, 3]]}
+
+I am using stage 0 from these plans
+I am using sample dice + CE loss
+
+I am using data from this folder:  /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task523_MultPathTest/nnUNetData_plans_v2.1
+###############################################
+loading dataset
+loading all case properties
+2024-06-02 13:14:34.446977: Using splits from existing split file: /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task523_MultPathTest/splits_final.pkl
+2024-06-02 13:14:34.453888: The split file contains 5 splits.
+2024-06-02 13:14:34.454458: Desired fold for training: 0
+2024-06-02 13:14:34.455001: This split has 4 training and 1 validation cases.
+unpacking dataset
+done
+2024-06-02 13:14:36.007428: loading checkpoint /raid/edwardsb/projects/RANO/NNUnetModels/nnUNet/3d_fullres/Task523_MultPathTest/nnUNetTrainerV2__nnUNetPlans_pretrained_POSTOPP/fold_0/model_final_checkpoint.model train= True
+2024-06-02 13:14:36.464473: lr: 0.009991
+using pin_memory on device 0
+using pin_memory on device 0
+2024-06-02 13:14:54.556068: Unable to plot network architecture:
+2024-06-02 13:14:54.557517: No module named 'hiddenlayer'
+2024-06-02 13:14:54.558770: 
+printing the network instead:
+
+2024-06-02 13:14:54.559520: Generic_UNet(
+  (conv_blocks_localization): ModuleList(
+    (0): Sequential(
+      (0): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv3d(640, 320, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+            (instnorm): InstanceNorm3d(320, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+      (1): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv3d(320, 320, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+            (instnorm): InstanceNorm3d(320, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+    )
+    (1): Sequential(
+      (0): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv3d(512, 256, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+            (instnorm): InstanceNorm3d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+      (1): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv3d(256, 256, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+            (instnorm): InstanceNorm3d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+    )
+    (2): Sequential(
+      (0): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv3d(256, 128, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+            (instnorm): InstanceNorm3d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+      (1): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv3d(128, 128, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+            (instnorm): InstanceNorm3d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+    )
+    (3): Sequential(
+      (0): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv3d(128, 64, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+            (instnorm): InstanceNorm3d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+      (1): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv3d(64, 64, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+            (instnorm): InstanceNorm3d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+    )
+    (4): Sequential(
+      (0): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv3d(64, 32, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+            (instnorm): InstanceNorm3d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+      (1): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv3d(32, 32, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+            (instnorm): InstanceNorm3d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+    )
+  )
+  (conv_blocks_context): ModuleList(
+    (0): StackedConvLayers(
+      (blocks): Sequential(
+        (0): ConvDropoutNormNonlin(
+          (conv): Conv3d(4, 32, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+          (instnorm): InstanceNorm3d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+          (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+        )
+        (1): ConvDropoutNormNonlin(
+          (conv): Conv3d(32, 32, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+          (instnorm): InstanceNorm3d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+          (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+        )
+      )
+    )
+    (1): StackedConvLayers(
+      (blocks): Sequential(
+        (0): ConvDropoutNormNonlin(
+          (conv): Conv3d(32, 64, kernel_size=(3, 3, 3), stride=(2, 2, 2), padding=(1, 1, 1))
+          (instnorm): InstanceNorm3d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+          (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+        )
+        (1): ConvDropoutNormNonlin(
+          (conv): Conv3d(64, 64, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+          (instnorm): InstanceNorm3d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+          (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+        )
+      )
+    )
+    (2): StackedConvLayers(
+      (blocks): Sequential(
+        (0): ConvDropoutNormNonlin(
+          (conv): Conv3d(64, 128, kernel_size=(3, 3, 3), stride=(2, 2, 2), padding=(1, 1, 1))
+          (instnorm): InstanceNorm3d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+          (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+        )
+        (1): ConvDropoutNormNonlin(
+          (conv): Conv3d(128, 128, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+          (instnorm): InstanceNorm3d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+          (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+        )
+      )
+    )
+    (3): StackedConvLayers(
+      (blocks): Sequential(
+        (0): ConvDropoutNormNonlin(
+          (conv): Conv3d(128, 256, kernel_size=(3, 3, 3), stride=(2, 2, 2), padding=(1, 1, 1))
+          (instnorm): InstanceNorm3d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+          (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+        )
+        (1): ConvDropoutNormNonlin(
+          (conv): Conv3d(256, 256, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+          (instnorm): InstanceNorm3d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+          (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+        )
+      )
+    )
+    (4): StackedConvLayers(
+      (blocks): Sequential(
+        (0): ConvDropoutNormNonlin(
+          (conv): Conv3d(256, 320, kernel_size=(3, 3, 3), stride=(2, 2, 2), padding=(1, 1, 1))
+          (instnorm): InstanceNorm3d(320, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+          (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+        )
+        (1): ConvDropoutNormNonlin(
+          (conv): Conv3d(320, 320, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+          (instnorm): InstanceNorm3d(320, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+          (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+        )
+      )
+    )
+    (5): Sequential(
+      (0): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv3d(320, 320, kernel_size=(3, 3, 3), stride=(2, 2, 2), padding=(1, 1, 1))
+            (instnorm): InstanceNorm3d(320, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+      (1): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv3d(320, 320, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+            (instnorm): InstanceNorm3d(320, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+    )
+  )
+  (td): ModuleList()
+  (tu): ModuleList(
+    (0): ConvTranspose3d(320, 320, kernel_size=(2, 2, 2), stride=(2, 2, 2), bias=False)
+    (1): ConvTranspose3d(320, 256, kernel_size=(2, 2, 2), stride=(2, 2, 2), bias=False)
+    (2): ConvTranspose3d(256, 128, kernel_size=(2, 2, 2), stride=(2, 2, 2), bias=False)
+    (3): ConvTranspose3d(128, 64, kernel_size=(2, 2, 2), stride=(2, 2, 2), bias=False)
+    (4): ConvTranspose3d(64, 32, kernel_size=(2, 2, 2), stride=(2, 2, 2), bias=False)
+  )
+  (seg_outputs): ModuleList(
+    (0): Conv3d(320, 5, kernel_size=(1, 1, 1), stride=(1, 1, 1), bias=False)
+    (1): Conv3d(256, 5, kernel_size=(1, 1, 1), stride=(1, 1, 1), bias=False)
+    (2): Conv3d(128, 5, kernel_size=(1, 1, 1), stride=(1, 1, 1), bias=False)
+    (3): Conv3d(64, 5, kernel_size=(1, 1, 1), stride=(1, 1, 1), bias=False)
+    (4): Conv3d(32, 5, kernel_size=(1, 1, 1), stride=(1, 1, 1), bias=False)
+  )
+)
+2024-06-02 13:14:54.565151: 
+
+2024-06-02 13:14:54.566433: 
+epoch:  1
+2024-06-02 13:19:57.528122: train loss : -0.4628
+2024-06-02 13:20:16.245594: validation loss: -0.3538
+2024-06-02 13:20:16.247673: Average global foreground Dice: [0.5089, 0.3929, 0.7574]
+2024-06-02 13:20:16.248421: (interpret this as an estimate for the Dice of the different classes. This is not exact.)
+2024-06-02 13:20:17.272303: lr: 0.009982
+2024-06-02 13:20:17.272957: This epoch took 322.705879 s
+
+2024-06-02 13:20:17.383559: saving checkpoint to /raid/edwardsb/projects/RANO/NNUnetModels/nnUNet/3d_fullres/Task523_MultPathTest/nnUNetTrainerV2__nnUNetPlans_pretrained_POSTOPP/fold_0/model_final_checkpoint.model...
+2024-06-02 13:20:17.954904: done, saving took 0.68 seconds
+###########
+Starting training for task: Task524_MultPathTest
+
+###############################################
+I am running the following nnUNet: 3d_fullres
+My trainer class is:  <class 'nnunet.training.network_training.nnUNetTrainerV2.nnUNetTrainerV2'>
+For that I will be using the following configuration:
+num_classes:  4
+modalities:  {0: '_0000', 1: '_0001', 2: '_0002', 3: '_0003'}
+use_mask_for_norm OrderedDict([(0, True), (1, True), (2, True), (3, True)])
+keep_only_largest_region None
+min_region_size_per_class None
+min_size_per_class None
+normalization_schemes OrderedDict([(0, 'nonCT'), (1, 'nonCT'), (2, 'nonCT'), (3, 'nonCT')])
+stages...
+
+stage:  0
+{'batch_size': 2, 'num_pool_per_axis': [5, 5, 5], 'patch_size': array([128, 128, 128]), 'median_patient_size_in_voxels': array([139, 170, 138]), 'current_spacing': array([1., 1., 1.]), 'original_spacing': array([1., 1., 1.]), 'do_dummy_2D_data_aug': False, 'pool_op_kernel_sizes': [[2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2]], 'conv_kernel_sizes': [[3, 3, 3], [3, 3, 3], [3, 3, 3], [3, 3, 3], [3, 3, 3], [3, 3, 3]]}
+
+I am using stage 0 from these plans
+I am using sample dice + CE loss
+
+I am using data from this folder:  /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task524_MultPathTest/nnUNetData_plans_v2.1
+###############################################
+loading dataset
+loading all case properties
+2024-06-02 13:20:18.442104: Using splits from existing split file: /raid/edwardsb/projects/RANO/BraTS22_pretending_tobe_postopp/nnUNet_raw_data_base/nnUNet_preprocessed/Task524_MultPathTest/splits_final.pkl
+2024-06-02 13:20:18.444320: The split file contains 5 splits.
+2024-06-02 13:20:18.444851: Desired fold for training: 0
+2024-06-02 13:20:18.445400: This split has 4 training and 1 validation cases.
+unpacking dataset
+done
+2024-06-02 13:20:20.191287: loading checkpoint /raid/edwardsb/projects/RANO/NNUnetModels/nnUNet/3d_fullres/Task524_MultPathTest/nnUNetTrainerV2__nnUNetPlans_pretrained_POSTOPP/fold_0/model_final_checkpoint.model train= True
+2024-06-02 13:20:20.621417: lr: 0.009991
+using pin_memory on device 0
+using pin_memory on device 0
+2024-06-02 13:20:38.882228: Unable to plot network architecture:
+2024-06-02 13:20:38.885060: No module named 'hiddenlayer'
+2024-06-02 13:20:38.886583: 
+printing the network instead:
+
+2024-06-02 13:20:38.887336: Generic_UNet(
+  (conv_blocks_localization): ModuleList(
+    (0): Sequential(
+      (0): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv3d(640, 320, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+            (instnorm): InstanceNorm3d(320, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+      (1): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv3d(320, 320, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+            (instnorm): InstanceNorm3d(320, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+    )
+    (1): Sequential(
+      (0): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv3d(512, 256, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+            (instnorm): InstanceNorm3d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+      (1): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv3d(256, 256, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+            (instnorm): InstanceNorm3d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+    )
+    (2): Sequential(
+      (0): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv3d(256, 128, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+            (instnorm): InstanceNorm3d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+      (1): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv3d(128, 128, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+            (instnorm): InstanceNorm3d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+    )
+    (3): Sequential(
+      (0): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv3d(128, 64, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+            (instnorm): InstanceNorm3d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+      (1): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv3d(64, 64, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+            (instnorm): InstanceNorm3d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+    )
+    (4): Sequential(
+      (0): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv3d(64, 32, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+            (instnorm): InstanceNorm3d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+      (1): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv3d(32, 32, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+            (instnorm): InstanceNorm3d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+    )
+  )
+  (conv_blocks_context): ModuleList(
+    (0): StackedConvLayers(
+      (blocks): Sequential(
+        (0): ConvDropoutNormNonlin(
+          (conv): Conv3d(4, 32, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+          (instnorm): InstanceNorm3d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+          (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+        )
+        (1): ConvDropoutNormNonlin(
+          (conv): Conv3d(32, 32, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+          (instnorm): InstanceNorm3d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+          (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+        )
+      )
+    )
+    (1): StackedConvLayers(
+      (blocks): Sequential(
+        (0): ConvDropoutNormNonlin(
+          (conv): Conv3d(32, 64, kernel_size=(3, 3, 3), stride=(2, 2, 2), padding=(1, 1, 1))
+          (instnorm): InstanceNorm3d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+          (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+        )
+        (1): ConvDropoutNormNonlin(
+          (conv): Conv3d(64, 64, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+          (instnorm): InstanceNorm3d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+          (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+        )
+      )
+    )
+    (2): StackedConvLayers(
+      (blocks): Sequential(
+        (0): ConvDropoutNormNonlin(
+          (conv): Conv3d(64, 128, kernel_size=(3, 3, 3), stride=(2, 2, 2), padding=(1, 1, 1))
+          (instnorm): InstanceNorm3d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+          (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+        )
+        (1): ConvDropoutNormNonlin(
+          (conv): Conv3d(128, 128, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+          (instnorm): InstanceNorm3d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+          (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+        )
+      )
+    )
+    (3): StackedConvLayers(
+      (blocks): Sequential(
+        (0): ConvDropoutNormNonlin(
+          (conv): Conv3d(128, 256, kernel_size=(3, 3, 3), stride=(2, 2, 2), padding=(1, 1, 1))
+          (instnorm): InstanceNorm3d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+          (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+        )
+        (1): ConvDropoutNormNonlin(
+          (conv): Conv3d(256, 256, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+          (instnorm): InstanceNorm3d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+          (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+        )
+      )
+    )
+    (4): StackedConvLayers(
+      (blocks): Sequential(
+        (0): ConvDropoutNormNonlin(
+          (conv): Conv3d(256, 320, kernel_size=(3, 3, 3), stride=(2, 2, 2), padding=(1, 1, 1))
+          (instnorm): InstanceNorm3d(320, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+          (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+        )
+        (1): ConvDropoutNormNonlin(
+          (conv): Conv3d(320, 320, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+          (instnorm): InstanceNorm3d(320, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+          (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+        )
+      )
+    )
+    (5): Sequential(
+      (0): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv3d(320, 320, kernel_size=(3, 3, 3), stride=(2, 2, 2), padding=(1, 1, 1))
+            (instnorm): InstanceNorm3d(320, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+      (1): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv3d(320, 320, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
+            (instnorm): InstanceNorm3d(320, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+    )
+  )
+  (td): ModuleList()
+  (tu): ModuleList(
+    (0): ConvTranspose3d(320, 320, kernel_size=(2, 2, 2), stride=(2, 2, 2), bias=False)
+    (1): ConvTranspose3d(320, 256, kernel_size=(2, 2, 2), stride=(2, 2, 2), bias=False)
+    (2): ConvTranspose3d(256, 128, kernel_size=(2, 2, 2), stride=(2, 2, 2), bias=False)
+    (3): ConvTranspose3d(128, 64, kernel_size=(2, 2, 2), stride=(2, 2, 2), bias=False)
+    (4): ConvTranspose3d(64, 32, kernel_size=(2, 2, 2), stride=(2, 2, 2), bias=False)
+  )
+  (seg_outputs): ModuleList(
+    (0): Conv3d(320, 5, kernel_size=(1, 1, 1), stride=(1, 1, 1), bias=False)
+    (1): Conv3d(256, 5, kernel_size=(1, 1, 1), stride=(1, 1, 1), bias=False)
+    (2): Conv3d(128, 5, kernel_size=(1, 1, 1), stride=(1, 1, 1), bias=False)
+    (3): Conv3d(64, 5, kernel_size=(1, 1, 1), stride=(1, 1, 1), bias=False)
+    (4): Conv3d(32, 5, kernel_size=(1, 1, 1), stride=(1, 1, 1), bias=False)
+  )
+)
+2024-06-02 13:20:38.899897: 
+
+2024-06-02 13:20:38.901084: 
+epoch:  1
+2024-06-02 13:25:40.832406: train loss : -0.3570
+2024-06-02 13:25:59.786981: validation loss: -0.2565
+2024-06-02 13:25:59.788439: Average global foreground Dice: [0.2088, 0.6198, 0.6592]
+2024-06-02 13:25:59.789122: (interpret this as an estimate for the Dice of the different classes. This is not exact.)
+2024-06-02 13:26:00.249808: lr: 0.009982
+2024-06-02 13:26:00.250547: This epoch took 321.348675 s
+
+2024-06-02 13:26:00.340047: saving checkpoint to /raid/edwardsb/projects/RANO/NNUnetModels/nnUNet/3d_fullres/Task524_MultPathTest/nnUNetTrainerV2__nnUNetPlans_pretrained_POSTOPP/fold_0/model_final_checkpoint.model...
+2024-06-02 13:26:00.907965: done, saving took 0.66 seconds
+##############################################################################################
+
+##############################################################################################
+
+                            ALL TESTS PASSED
+
+##############################################################################################
+
+##############################################################################################
+

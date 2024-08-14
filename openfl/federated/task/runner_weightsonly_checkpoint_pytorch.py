@@ -37,6 +37,8 @@ class WeightsOnlyPyTorchCheckpointTaskRunner(TaskRunner):
        pull model state from a PyTorch checkpoint."""
 
     def __init__(self,
+                 num_train_batches_per_epoch,
+                 num_val_batches_per_epoch,
                  nnunet_task=None,
                  checkpoint_out_path = None,
                  checkpoint_in_path = None,
@@ -48,6 +50,8 @@ class WeightsOnlyPyTorchCheckpointTaskRunner(TaskRunner):
         """Initialize.
 
         Args:
+            num_train_batches_per_epoch : Number of batches to train over each epoch (samples with replacement)
+            num_val_batches_per_epoch   : Number of batches to validate with each epoch (sampled with replacement?)
             checkpoint_out_path(str)    : Path to the model checkpoint that will be used to start local training.
             checkpoint_in_path(str)     : Path to model checkpoint that results from performing local training.
             device(str)                 : Device ('cpu' or 'cuda') to be used for training and validation script computations.
@@ -57,6 +61,9 @@ class WeightsOnlyPyTorchCheckpointTaskRunner(TaskRunner):
             TODO: 
         """ 
         super().__init__(**kwargs)
+
+        self.num_train_batches_per_epoch = num_train_batches_per_epoch
+        self.num_val_batches_per_epoch=num_val_batches_per_epoch
 
         # TODO: Both 'CONTINUE_GLOBAL' and 'RESET' could be suported here too (currently RESET throws an exception related to a 
         # missmatch in size coming from the momentum buffer and other stuff either in the model or optimizer)
@@ -223,7 +230,6 @@ class WeightsOnlyPyTorchCheckpointTaskRunner(TaskRunner):
         epoch = checkpoint_dict['epoch']
         new_state = {}
         # grabbing keys from the checkpoint state dict, poping from the tensor_dict
-        # Brandon DEBUGGING
         seen_keys = []
         for k in checkpoint_dict['state_dict']:
             if k not in seen_keys:
@@ -369,7 +375,11 @@ class WeightsOnlyPyTorchCheckpointTaskRunner(TaskRunner):
         # Some todo inside function below
         # TODO: test for off-by-one error
         # TODO: we need to disable validation if possible, and separately call validation  
-        train_nnunet(epochs=epochs, current_epoch=current_epoch, task=self.data_loader.get_task_name())
+        train_nnunet(epochs=epochs, 
+                     current_epoch=current_epoch, 
+                     num_train_batches_per_epoch=self.num_train_batches_per_epoch, 
+                     num_val_batches_per_epoch=self.num_val_batches_per_epoch, 
+                     task=self.data_loader.get_task_name())
        
         """
         # This is actual code to use later that calls an external procedure

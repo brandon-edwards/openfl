@@ -51,7 +51,12 @@ class WeightsOnlyPyTorchCheckpointTaskRunner(TaskRunner):
 
         Args:
             num_train_batches_per_epoch : Number of batches to train over each epoch (samples with replacement)
-            num_val_batches_per_epoch   : Number of batches to validate with each epoch (sampled with replacement?)
+                                          Should be set as: 
+                                                            partial_epoch * p_train * num_samples_before_trainval_split / batch_size
+
+            num_val_batches_per_epoch   : Number of batches to validate with each epoch (sampled with replacement)
+                                          Should be set as: 
+                                                            partial_epoch * (1 - p_train) * num_samples_before_trainval_split / batch_size
             checkpoint_out_path(str)    : Path to the model checkpoint that will be used to start local training.
             checkpoint_in_path(str)     : Path to model checkpoint that results from performing local training.
             device(str)                 : Device ('cpu' or 'cuda') to be used for training and validation script computations.
@@ -63,7 +68,7 @@ class WeightsOnlyPyTorchCheckpointTaskRunner(TaskRunner):
         super().__init__(**kwargs)
 
         self.num_train_batches_per_epoch = num_train_batches_per_epoch
-        self.num_val_batches_per_epoch=num_val_batches_per_epoch
+        self.num_val_batches_per_epoch = num_val_batches_per_epoch
 
         # TODO: Both 'CONTINUE_GLOBAL' and 'RESET' could be suported here too (currently RESET throws an exception related to a 
         # missmatch in size coming from the momentum buffer and other stuff either in the model or optimizer)

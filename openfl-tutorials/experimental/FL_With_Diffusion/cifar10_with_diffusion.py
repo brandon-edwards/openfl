@@ -18,6 +18,7 @@ from openfl.experimental.runtime import LocalRuntime
 from openfl.experimental.placement import aggregator, collaborator
 import torchvision.transforms as transforms
 import pickle
+import pandas as pd
 from pathlib import Path
 
 import copy
@@ -30,12 +31,13 @@ from cifar10_loader import CIFAR10
 import warnings
 
 sys.path.append("/home/edwardsb/repositories/be-SATGOpenFL/openfl-tutorials/experimental/FL_With_Diffusion")
-from data_utils import split_data_by_class, stratified_split, combine_data
+from data_utils import split_data_by_class, stratified_split, combine_dicts, features_labels_to_dict
 warnings.filterwarnings("ignore")
 
-batch_size_train = 32
-batch_size_test = 1000
-learning_rate = 0.005
+batch_size_train = 1024
+batch_size_test = 1024
+# changed learning rate to come in via arguments
+# learning_rate = 0.2
 momentum = 0.9
 log_interval = 10
 
@@ -79,12 +81,13 @@ class Net(nn.Module):
         return x
 
 
-def default_optimizer(model, optimizer_type=None, optimizer_like=None):
+def default_optimizer(model, learning_rate, optimizer_type=None, optimizer_like=None):
     """
     Return a new optimizer based on the optimizer_type or the optimizer template
 
     Args:
         model:   NN model architected from nn.module class
+        learning_rate: apply to optimizer
         optimizer_type: "SGD" or "Adam"
         optimizer_like: "torch.optim.SGD" or "torch.optim.Adam" optimizer
     """
@@ -108,37 +111,63 @@ def FedAvg(models):  # NOQA: N802
         state_dicts = [model.state_dict() for model in models]
         state_dict = new_model.state_dict()
         for key in models[1].state_dict():
-            state_dict[key] = np.sum(
-                [state[key] for state in state_dicts], axis=0
-            ) / len(models)
+            state_dict[key] = torch.stack([state[key] for state in state_dicts], axis=0).sum(axis=0)/len(models)
         new_model.load_state_dict(state_dict)
     return new_model
 
 
 def inference(network, test_loader, device):
+    # TODO: This is hard coded to depend on 10 classes
+    # TODO: Double check the sub batching here is not messing up the scoring
     network.eval()
     network.to(device)
     test_loss = 0
     correct = 0
+    test_loss_by_label = {label: 0 for label in range(10)}
+    correct_by_label = {label: 0 for label in range(10)}
+    count_by_label = {label: 0 for label in range(10)}
     with torch.no_grad():
-        for data, target in test_loader:
-            data = data.to(device)
-            target = target.to(device)
-            output = network(data)
-            criterion = nn.CrossEntropyLoss()
-            test_loss += criterion(output, target).item()
-            pred = output.data.max(1, keepdim=True)[1]
-            correct += pred.eq(target.data.view_as(pred)).sum()
+        for batch_data, batch_target in test_loader:
+            for label in range(10):
+                label_mask = (batch_target == label)
+                if torch.any(label_mask):
+                    data = batch_data[label_mask]
+                    target = batch_target[label_mask]
+
+                    data = data.to(device)
+                    target = target.to(device)
+                    output = network(data)
+                    criterion = nn.CrossEntropyLoss()
+                    test_loss += criterion(output, target).item()
+                    test_loss_by_label[label] += criterion(output, target).item()
+                    pred = output.data.max(1, keepdim=True)[1]
+                    correct_by_label[label] += pred.eq(target.data.view_as(pred)).sum().item()
+                    correct += pred.eq(target.data.view_as(pred)).sum()
+                    count_by_label[label] += len(data)
+                else:
+                    continue
     test_loss /= len(test_loader)
+    for label in test_loss_by_label:
+        if count_by_label[label] != 0:
+            test_loss_by_label[label] /= count_by_label[label]
+        else:
+            test_loss_by_label[label] = 0
+    accuracy_by_label = {label: (float(correct_by_label[label] / count_by_label[label]) if count_by_label[label] != 0 else 1.0) for label in count_by_label }
+
     accuracy = float(correct / len(test_loader.dataset))
     print(
         (
             f"Test set: Avg. loss: {test_loss}, "
-            f"Accuracy: {correct}/{len(test_loader.dataset)} ({100.0 * accuracy}%)"
+            f"Accuracy: {correct}/{len(test_loader.dataset)} ({100.0 * accuracy}%)\n"
         )
     )
+    print(f"Accuracy by label: {accuracy_by_label}")
+    print(f"Count by label: {count_by_label}")
+    
+
+        
     network.to("cpu")
-    return accuracy
+    return accuracy, accuracy_by_label, count_by_label
 
 
 def optimizer_to_device(optimizer, device):
@@ -166,7 +195,7 @@ def optimizer_to_device(optimizer, device):
 
 
 def load_previous_round_model_and_optimizer_and_perform_testing(
-    model, global_model, optimizer, collaborator_name, round_num, device
+    model, global_model, optimizer, learning_rate, collaborator_name, round_num, device
 ):
     """
     Load pickle file to retrieve the model and optimizer state dictionary
@@ -180,6 +209,7 @@ def load_previous_round_model_and_optimizer_and_perform_testing(
         model: local collaborator model at the current round
         global_model: Federated averaged model at the aggregator
         optimizer: local collaborator optimizer at the current round
+        learning_rate: apply to optimizer
         collaborator_name: name of the collaborator (Type:string)
         round_num: current round (Type:int)
         device: CUDA device id or "cpu"
@@ -187,7 +217,7 @@ def load_previous_round_model_and_optimizer_and_perform_testing(
     print(f"Loading model and optimizer state dict for round {round_num-1}")
     model_prevround = Net()  # instanciate a new model
     model_prevround = model_prevround.to(device)
-    optimizer_prevround = default_optimizer(model_prevround, optimizer_like=optimizer)
+    optimizer_prevround = default_optimizer(model=model_prevround, learning_rate=learning_rate, optimizer_like=optimizer)
     if os.path.isfile(
         f"Collaborator_{collaborator_name}_model_config_roundnumber_{round_num-1}.pickle"
     ):
@@ -309,21 +339,35 @@ class FederatedFlow(FLSpec):
         self,
         model,
         optimizers,
+        learning_rate,
         device="cpu",
-        total_rounds=10,
+        total_rounds=1,
         top_model_accuracy=0,
         flow_internal_loop_test=False,
+        fpath_results_df='DEFAULT',
         **kwargs,
     ):
         super().__init__(**kwargs)
         self.model = model
         self.global_model = Net()
         self.optimizers = optimizers
+        self.learning_rate = learning_rate
         self.total_rounds = total_rounds
         self.top_model_accuracy = top_model_accuracy
         self.device = device
         self.flow_internal_loop_test = flow_internal_loop_test
         self.round_num = 0  # starting round
+        self.fpath_results_df = fpath_results_df
+        # TODO: make more general
+        self.results_colnames = {"Round": "Round",
+                                 "Loc": "Location", # col name or global
+                                 "Lab": "Label", # can be a string representation of int in 0-9 or 'AVE'
+                                 "Met": "Metric", 
+                                 "MetVal": "Metric Value"}
+        self.metric_names = {"Loss": "Loss", 
+                             "AggAcc": "Aggregated Model Accuracy", 
+                             "LocAcc": "Local Model Accuracy"}
+        self.results_dict = {name: [] for name in self.results_colnames.values()}
         print(20 * "#")
         print(f"Round {self.round_num}...")
         print(20 * "#")
@@ -348,8 +392,8 @@ class FederatedFlow(FLSpec):
                 f"{self.input} in round {self.round_num}"
             )
         )
-        self.agg_validation_score = inference(self.model, self.test_loader, self.device)
-        print(f"{self.input} value of {self.agg_validation_score}")
+        self.agg_validation_score, self.agg_validation_score_by_label, self.test_count_by_label = inference(self.model, self.test_loader, self.device)
+        print(f"{self.input} value of {self.agg_validation_score} and by label: {self.agg_validation_score_by_label}")
         self.collaborator_name = self.input
         self.next(self.train)
 
@@ -360,9 +404,13 @@ class FederatedFlow(FLSpec):
             f"Performing model training for collaborator {self.input} in round {self.round_num}"
         )
 
+        # store data size for later use (currently allowing these to get overwritten repeatedly)
+        self.train_data_size = len(self.train_loader)
+        self.test_data_size = len(self.test_loader)
+
         self.model.to(self.device)
         self.optimizer = default_optimizer(
-            self.model, optimizer_like=self.optimizers[self.input]
+            model=self.model, optimizer_like=self.optimizers[self.input], learning_rate=self.learning_rate
         )
 
         if self.round_num > 0:
@@ -373,12 +421,13 @@ class FederatedFlow(FLSpec):
 
             if self.flow_internal_loop_test:
                 load_previous_round_model_and_optimizer_and_perform_testing(
-                    self.model,
-                    self.global_model,
-                    self.optimizer,
-                    self.collaborator_name,
-                    self.round_num,
-                    self.device,
+                    model=self.model,
+                    global_model=self.global_model,
+                    optimizer=self.optimizer,
+                    learning_rate=self.learning_rate,
+                    collaborator_name=self.collaborator_name,
+                    round_num=self.round_num,
+                    device=self.device,
                 )
 
         self.model.train()
@@ -422,11 +471,11 @@ class FederatedFlow(FLSpec):
         start_time = time.time()
 
         print("Test dataset performance")
-        self.local_validation_score = inference(
+        self.local_validation_score, self.local_validation_score_by_label, self.test_count_by_label = inference(
             self.model, self.test_loader, self.device
         )
         print("Train dataset performance")
-        self.local_validation_score_train = inference(
+        self.local_validation_score_train, self.local_validation_score_train_by_label, self.train_count_by_label = inference(
             self.model, self.train_loader, self.device
         )
 
@@ -438,31 +487,82 @@ class FederatedFlow(FLSpec):
         )
         print(f"local validation time cost {(time.time() - start_time)}")
 
-        if (
-            self.round_num == 0
-            or self.round_num % self.local_pm_info.interval == 0
-            or self.round_num == self.total_rounds
-        ):
-            print("Performing Auditing")
-            self.next(self.audit)
-        else:
-            self.next(self.join, exclude=["training_completed"])
+        self.next(self.join, exclude=["training_completed"])
 
     
     @aggregator
     def join(self, inputs):
-        self.average_loss = sum(input.loss for input in inputs) / len(inputs)
-        self.aggregated_model_accuracy = sum(
-            input.agg_validation_score for input in inputs
-        ) / len(inputs)
-        self.local_model_accuracy = sum(
-            input.local_validation_score for input in inputs
-        ) / len(inputs)
-        print(
-            f"Average aggregated model validation values = {self.aggregated_model_accuracy}"
-        )
+        # store individual collaborator results
+        for input in inputs:
+            # a row for loss
+            self.results_dict[self.results_colnames["Round"]].append(self.round_num)
+            self.results_dict[self.results_colnames["Loc"]].append(input.input) # col name or "All"
+            self.results_dict[self.results_colnames["Lab"]].append("AVE") # label or 'AVE'
+            self.results_dict[self.results_colnames["Met"]].append(self.metric_names["Loss"])
+            self.results_dict[self.results_colnames["MetVal"]].append(input.loss)
+
+            for label in range(10):
+
+                # a row for this collaborator, this label, aggregated model accuracy
+                self.results_dict[self.results_colnames["Round"]].append(self.round_num)
+                self.results_dict[self.results_colnames["Loc"]].append(input.input) # col name or "All"
+                self.results_dict[self.results_colnames["Lab"]].append(label) # label or 'AVE'
+                self.results_dict[self.results_colnames["Met"]].append(self.metric_names["AggAcc"])
+                self.results_dict[self.results_colnames["MetVal"]].append(input.agg_validation_score_by_label[label])
+
+
+                # a row for this collaborator, this label, local model accuracy
+                self.results_dict[self.results_colnames["Round"]].append(self.round_num)
+                self.results_dict[self.results_colnames["Loc"]].append(input.input) # col name or "All"
+                self.results_dict[self.results_colnames["Lab"]].append(label) # label or 'AVE'
+                self.results_dict[self.results_colnames["Met"]].append(self.metric_names["LocAcc"])
+                self.results_dict[self.results_colnames["MetVal"]].append(input.local_validation_score_by_label[label])
+
+        # To aggregate metrics we need to account for difference in data sizes
+        col_weights_train = [input.train_data_size for input in inputs]
+        col_weights_test = [input.test_data_size for input in inputs]
+        # hard coding for 10 classes
+        col_weights_by_label_test = {}
+        for label in range(10):
+            col_weights_by_label_test[label] = [input.test_count_by_label[label] for input in inputs]
+
+        self.average_loss = np.average([input.loss for input in inputs], weights=col_weights_train)
+        self.aggregated_model_accuracy = np.average([input.agg_validation_score for input in inputs], weights=col_weights_test)
+        self.aggregated_model_accuracy_by_label = {}
+        for label in range(10):
+            self.aggregated_model_accuracy_by_label[label] = np.average([input.agg_validation_score_by_label[label] for input in inputs], weights=col_weights_by_label_test[label])
+        self.local_model_accuracy = np.average([input.local_validation_score for input in inputs], weights=col_weights_test)
+
+
+        # Storing cross collaborator aggregated results now so that I don't have to know datasizes later
+
+        for label in range(10):
+
+            # a row for this label, AVE of aggregated model accuracies across collaborators
+            self.results_dict[self.results_colnames["Round"]].append(self.round_num)
+            self.results_dict[self.results_colnames["Loc"]].append("All") # col name or 'All"
+            self.results_dict[self.results_colnames["Lab"]].append(label) # label or 'AVE'
+            self.results_dict[self.results_colnames["Met"]].append(self.metric_names["AggAcc"])
+            self.results_dict[self.results_colnames["MetVal"]].append(self.aggregated_model_accuracy_by_label[label])
+
+        # same averaged across labels
+        self.results_dict[self.results_colnames["Round"]].append(self.round_num)
+        self.results_dict[self.results_colnames["Loc"]].append("All") # col name or 'All"
+        self.results_dict[self.results_colnames["Lab"]].append('AVE') # label or 'AVE'
+        self.results_dict[self.results_colnames["Met"]].append(self.metric_names["AggAcc"])
+        self.results_dict[self.results_colnames["MetVal"]].append(self.aggregated_model_accuracy)
+
+        
+        print("\n####################################################################")
+        print(f"Average aggregated model validation values = {self.aggregated_model_accuracy}")
         print(f"Average training loss = {self.average_loss}")
         print(f"Average local model validation values = {self.local_model_accuracy}")
+        print("####################################################################\n")
+
+        # write the results to disk
+        if self.round_num == self.total_rounds:
+            results_df = pd.DataFrame(self.results_dict)
+            results_df.to_csv(self.fpath_results_df, index=False)
 
         self.model = FedAvg([input.model.cpu() for input in inputs])
         self.global_model.load_state_dict(deepcopy(self.model.state_dict()))
@@ -508,12 +608,6 @@ class FederatedFlow(FLSpec):
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser(description=__doc__)
     argparser.add_argument(
-        "--test_dataset_ratio",
-        type=float,
-        default=0.3,
-        help="Indicate the what fraction of the sample will be used for testing",
-    )
-    argparser.add_argument(
         "--train_dataset_ratio",
         type=float,
         default=0.7,
@@ -522,13 +616,13 @@ if __name__ == "__main__":
     argparser.add_argument(
         "--log_dir",
         type=str,
-        default="test_debug",
+        default="tutorial_logdir",
         help="Indicate where to save the privacy loss profile and log files during the training",
     )
     argparser.add_argument(
         "--comm_round",
         type=int,
-        default=30,
+        default=100,
         help="Indicate the communication round of FL",
     )
     argparser.add_argument(
@@ -543,14 +637,56 @@ if __name__ == "__main__":
         default="SGD",
         help="Indicate optimizer to use for training",
     )
+    argparser.add_argument(
+        "--synthetic_supplement_size",
+        type=int,
+        default=None,
+        help="Number of independent synthetic samples to supplement each collaborator (independent across collaborators too) not holding the missing class.",
+    )
+    argparser.add_argument(
+        "--fpath_synthetic_data",
+        type=str,
+        default='/home/edwardsb/repositories/nvidia_edm/class_6_batchsize_64_266_batches.pkl',
+        help="Number of independent synthetic samples to supplement each collaborator (independent across collaborators too) not holding the missing class.",
+    )
+    argparser.add_argument(
+        "--learning_rate",
+        type=float,
+        default=0.11,
+        help="Learning rate to apply to optimizer",
+    )
+    argparser.add_argument(
+        "--missing_class_ratio",
+        type=float,
+        default=0.33,
+        help="What portion of the missing class training samples to provide to collaborator 0 - the rest to be thrown away.",
+    )
 
     args = argparser.parse_args()
+    train_dataset_ratio = args.train_dataset_ratio
+    supp_size = args.synthetic_supplement_size
+    learning_rate = args.learning_rate
+    missing_class_ratio = args.missing_class_ratio
 
+    #######################################
     # Hard coded params
+    ######################################
+
     # Hard coding all frogs (class label 6) to go to col 0 and none to cols 1 and 2
     missing_class = 6 # frogs
     shuffle_seed = 11
+    if supp_size:
+        supp_tag = str(supp_size)
+    else:
+        supp_tag = '0'
+    lr_tag = f"lr_{learning_rate:.2f}"
+
+    # some hard coded paths
+    module_path = os.path.dirname(os.path.realpath(__file__))
+    fpath_data_by_col = os.path.join(module_path, f'data_by_col_each_with_sup_size_{supp_tag}.npy')
+    fpath_results_df = os.path.join(module_path, f'federation_results_missing_{missing_class}_supplement_size_{supp_tag}_{lr_tag}.csv')
     
+
     # Setup participants
     # If running with GPU and 1 GPU is available then
     # Set `num_gpus=0.3` to run on GPU
@@ -571,15 +707,32 @@ if __name__ == "__main__":
     cifar_test = CIFAR10(root="./data", train=False, download=True, transform=transform)
 
     # Split the dataset in train, test
-    if args.train_dataset_ratio + args.test_dataset_ratio != 1.0:
-        raise ValueError(f"Train and test ratios: {args.train_dataset_ratio} and {args.test_dataset_ratio} should add to 1.0")
     N_total_samples = len(cifar_test) + len(cifar_train)
-    train_dataset_size = int(N_total_samples * args.train_dataset_ratio)
-    test_dataset_size = int(N_total_samples * args.test_dataset_ratio)
+    train_dataset_size = int(N_total_samples * train_dataset_ratio)
+    test_dataset_size = N_total_samples - train_dataset_size
 
     X = np.concatenate([cifar_test.data, cifar_train.data])
-    # TODO: .tolist() needed below?
-    Y = np.concatenate([cifar_test.targets, cifar_train.targets]).tolist()
+    Y = np.concatenate([cifar_test.targets, cifar_train.targets])
+
+    print(f"\nFeatures from CIFAR10 have range: [{np.amin(X)}, {np.amax(X)}] and shape: {X.shape}")
+    print(f"Labels from CIFAR10 have values: {np.unique(Y)} and shape {Y.shape}\n")
+    print(f"Feature type is: {X.dtype} and Label type is {Y.dtype}")
+    
+
+    # now load up the sythetic supplement data from which we will sample to augment collaborators 1 ->
+    with open(args.fpath_synthetic_data, 'rb') as _file:
+        X_supp, Y_supp = pickle.load(_file)
+    print(f"\nSynthetic features have range: [{np.amin(X_supp)}, {np.amax(X_supp)}] and shape: {X_supp.shape}")
+    print(f"Synthetic labels have values: {np.unique(Y_supp)} and shape {Y_supp.shape}\n")
+    print(f"Feature type is: {X_supp.dtype} and Label type is {Y_supp.dtype}")
+    print(f"We are planning to supplement with {supp_tag} samples for all callaborators past collaborator 0.")
+
+    # shuffle data (for now fixing seed here)
+    rng = np.random.default_rng(1234)
+    _indices = np.arange(len(X))
+    rng.shuffle(_indices)
+    X = X[_indices]
+    Y = Y[_indices]
 
     train_dataset = deepcopy(cifar_train)
     train_dataset.data = X[:train_dataset_size]
@@ -598,25 +751,68 @@ if __name__ == "__main__":
     )
 
     # Split train, test datasets among collaborators
-    train_data_by_class = split_data_by_class(features=cifar_train.data, labels=cifar_train.targets)
-    test_data_by_class = split_data_by_class(features=cifar_test.data, labels=cifar_test.targets)
     
-    # remove class we want to be missing from all but the first collaborator
-    missing_class_train = train_data_by_class.pop(missing_class)
-    missing_class_test = test_data_by_class.pop(missing_class)
+    # First check whether the results are on disk
+    if os.path.exists(fpath_data_by_col):
+        train_data_by_col, test_data_by_col = np.load(fpath_data_by_col, allow_pickle=True)
+    else:
+        train_dict = features_labels_to_dict(features=train_dataset.data, labels=train_dataset.targets)
+        test_dict = features_labels_to_dict(features=test_dataset.data, labels=test_dataset.targets)
+        print(f"Organizing train data by class.")
+        train_data_by_class = split_data_by_class(_dict=train_dict)
+        print(f"Organizing test data by class.")
+        test_data_by_class = split_data_by_class(_dict=test_dict)
+        
+        # remove class we want to be missing from all but the first collaborator
+        missing_class_train = train_data_by_class.pop(missing_class)
+        missing_class_test = test_data_by_class.pop(missing_class)
+
+        # Take some portion of the missing class training samples to hold out from the first collaborator
+        n_missing_samples = len(missing_class_train['features'])
+        cutpoint = int(missing_class_ratio * n_missing_samples)
+        missing_class_train['features'] = missing_class_train['features'][:cutpoint]
+        missing_class_train['labels'] = missing_class_train['labels'][:cutpoint]
+        
+        # split what we have without the missing class   (dict_by_class, n_parts, shuffle=True, shuffle_seed=None)
+        print(f"Splitting train data in a stratified manor.")
+        train_data_by_col = stratified_split(dict_by_class=train_data_by_class, n_parts=3, shuffle=True, shuffle_seed=shuffle_seed)
+        print(f"Splitting test data in a stratified manor.")
+        test_data_by_col = stratified_split(dict_by_class=test_data_by_class, n_parts=3, shuffle=True, shuffle_seed=shuffle_seed)
+
+        # if indicated, supplement train data for col 1, 2, ...
+        if supp_size:
+            for col_num in train_data_by_col:
+                # col 0 already has the missing class so no supplementing needed
+                if col_num == 0:
+                    continue
+                else:
+                    # do we have enough synthetic samples?
+                    if (col_num) * supp_size > len(X_supp):
+                        raise ValueError(f"X_supp has length: {len(X_supp)} but you are now asking to take the index {col_num - 1} chunk of size {supp_size} which would require at least {(col_num) * supp_size} samples in X_supp.")
+                    sup_images = X_supp[(col_num-1)*supp_size:(col_num)*supp_size]
+                    sup_labels = Y_supp[(col_num-1)*supp_size:(col_num)*supp_size]
+
+                    train_data_by_col[col_num] = combine_dicts(train_data_by_col[col_num], features_labels_to_dict(features=sup_images,labels=sup_labels), shuffle=True, shuffle_seed=shuffle_seed)
+        
+        # now put the missing class back into col 0
+        train_data_by_col[0] = combine_dicts(train_data_by_col[0], missing_class_train, shuffle=True, shuffle_seed=shuffle_seed)
+        test_data_by_col[0] = combine_dicts(test_data_by_col[0], missing_class_test, shuffle=True, shuffle_seed=shuffle_seed)
     
-    # split what we have without the missing class   (dict_by_class, n_parts, shuffle=True, shuffle_seed=None)
-    train_data_by_col = stratified_split(dict_by_class=train_data_by_class, n_parts=3, shuffle_seed=shuffle_seed)
-    test_data_by_col = stratified_split(dict_by_class=test_data_by_class, n_parts=3, shuffle_seed=shuffle_seed)
-    
-    # now put back in the missing class
-    train_data_by_col[0] = combine_data(train_data_by_col[0], missing_class_train, shuffle=True, shuffle_seed=shuffle_seed)
-    test_data_by_col[0] = combine_data(test_data_by_col[0], missing_class_test, shuffle=True, shuffle_seed=shuffle_seed)
-    
+        np.save(fpath_data_by_col, (train_data_by_col, test_data_by_col))
+
+    print(f"#############################################")
+    print(f"Train data by col sizes:")
+    print(f"{[len(train_data_by_col[col_num]['features']) for col_num in train_data_by_col]}\n")
+
+    print(f"Test data by col sizes:")
+    print(f"{[len(test_data_by_col[col_num]['features']) for col_num in test_data_by_col]}\n")
+
+    print(f"#############################################")
+
     # this function will be called before executing collaborator steps
     # which will return private attributes dictionary for each collaborator
     def callable_to_initialize_collaborator_private_attributes(
-        index, n_collaborators, train_data_by_col, test_data_by_col, train_ds, test_ds, args
+        index, train_data_by_col, test_data_by_col, train_ds, test_ds, n_collaborators, args
     ):
         # construct the training and test and population dataset
         local_train = deepcopy(train_ds)
@@ -626,8 +822,8 @@ if __name__ == "__main__":
         local_train.targets = train_data_by_col[index]['labels']
 
         local_test.data = test_data_by_col[index]['features']
-        local_test.targets = test_data_by_col[index]['labels']
-
+        local_test.targets = test_data_by_col[index]['labels']            
+        
         return {
             "train_dataset": local_train,
             "test_dataset": local_test,
@@ -671,16 +867,18 @@ if __name__ == "__main__":
     model = Net()
     top_model_accuracy = 0
     optimizers = {
-        collaborator.name: default_optimizer(model, optimizer_type=args.optimizer_type)
+        collaborator.name: default_optimizer(model, optimizer_type=args.optimizer_type, learning_rate=learning_rate)
         for collaborator in collaborators
     }
     flflow = FederatedFlow(
-        model,
-        optimizers,
-        device,
-        args.comm_round,
-        top_model_accuracy,
-        args.flow_internal_loop_test,
+        model=model,
+        optimizers=optimizers,
+        device=device,
+        total_rounds=args.comm_round,
+        top_model_accuracy=top_model_accuracy,
+        flow_internal_loop_test=args.flow_internal_loop_test,
+        fpath_results_df=fpath_results_df, 
+        learning_rate=learning_rate
     )
 
     flflow.runtime = local_runtime

@@ -3,6 +3,7 @@
 
 
 """Keras Framework Adapter plugin."""
+
 from logging import getLogger
 
 from packaging import version
@@ -43,7 +44,6 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
         # Hotfix function, not required for TF versions above 2.7.1.
         # https://github.com/keras-team/keras/pull/14748.
         def make_keras_picklable():
-
             def __reduce__(self):  # NOQA:N807
                 model_metadata = saving_utils.model_metadata(self)
                 training_config = model_metadata.get("training_config", None)
@@ -56,7 +56,7 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
 
         # Run the function
         if version.parse(tf.__version__) <= version.parse("2.7.1"):
-            logger.warn(
+            logger.warning(
                 "Applying hotfix for model serialization."
                 "Please consider updating to tensorflow>=2.8 to silence this warning."
             )

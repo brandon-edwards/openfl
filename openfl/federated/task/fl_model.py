@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """FederatedModel module."""
+
 import inspect
 
 from openfl.federated.task.runner import TaskRunner
@@ -31,6 +32,8 @@ class FederatedModel(TaskRunner):
             pytorch).
         tensor_dict_split_fn_kwargs (dict): Keyword arguments for the tensor
             dict split function.
+        data_loader (FederatedDataSet): A dataset to distribute among the collaborators,
+            see TaskRunner for more details
     """
 
     def __init__(self, build_model, optimizer=None, loss_fn=None, **kwargs):
@@ -74,8 +77,15 @@ class FederatedModel(TaskRunner):
             self.runner.validate = lambda *args, **kwargs: build_model.validate(
                 self.runner, *args, **kwargs
             )
+
         if hasattr(self.model, "train_epoch"):
             self.runner.train_epoch = lambda *args, **kwargs: build_model.train_epoch(
+                self.runner, *args, **kwargs
+            )
+
+        # Used to hook the training function when debugging locally
+        if hasattr(self.model, "train_"):
+            self.runner.train_ = lambda *args, **kwargs: build_model.train_(
                 self.runner, *args, **kwargs
             )
         self.runner.model = self.model
@@ -129,7 +139,7 @@ class FederatedModel(TaskRunner):
                 optimizer=self.lambda_opt,
                 loss_fn=self.loss_fn,
                 data_loader=data_slice,
-                **kwargs
+                **kwargs,
             )
             for data_slice in self.data_loader.split(num_collaborators)
         ]

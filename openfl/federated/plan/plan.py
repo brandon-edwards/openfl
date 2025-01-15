@@ -3,6 +3,7 @@
 
 
 """Plan module."""
+
 from hashlib import sha384
 from importlib import import_module
 from logging import getLogger
@@ -80,7 +81,6 @@ class Plan:
         """
 
         class NoAliasDumper(SafeDumper):
-
             def ignore_aliases(self, data):
                 return True
 
@@ -98,7 +98,7 @@ class Plan:
             yaml_path.write_text(dump(config))
 
     @staticmethod
-    def parse(
+    def parse(  # noqa: C901
         plan_config_path: Path,
         cols_config_path: Path = None,
         data_config_path: Path = None,
@@ -124,7 +124,6 @@ class Plan:
             Plan: A Federated Learning plan object.
         """
         try:
-
             plan = Plan()
             plan.config = Plan.load(plan_config_path)  # load plan configuration
             plan.name = plan_config_path.name
@@ -132,7 +131,6 @@ class Plan:
 
             # ensure 'settings' appears in each top-level section
             for section in plan.config.keys():
-
                 if plan.config[section].get(SETTINGS) is None:
                     plan.config[section][SETTINGS] = {}
 
@@ -393,18 +391,9 @@ class Plan:
         defaults[SETTINGS]["assigner"] = self.get_assigner()
         defaults[SETTINGS]["compression_pipeline"] = self.get_tensor_pipe()
         defaults[SETTINGS]["straggler_handling_policy"] = self.get_straggler_handling_policy()
-        log_metric_callback = defaults[SETTINGS].get("log_metric_callback")
 
-        if log_metric_callback:
-            if isinstance(log_metric_callback, dict):
-                log_metric_callback = Plan.import_(**log_metric_callback)
-            elif not callable(log_metric_callback):
-                raise TypeError(
-                    f"log_metric_callback should be callable object "
-                    f"or be import from code part, get {log_metric_callback}"
-                )
+        # TODO: Load callbacks from plan.
 
-        defaults[SETTINGS]["log_metric_callback"] = log_metric_callback
         if self.aggregator_ is None:
             self.aggregator_ = Plan.build(**defaults, initial_tensor_dict=tensor_dict)
 
@@ -579,6 +568,8 @@ class Plan:
         defaults[SETTINGS]["aggregator_uuid"] = self.aggregator_uuid
         defaults[SETTINGS]["federation_uuid"] = self.federation_uuid
 
+        # TODO: Load callbacks from the plan.
+
         if task_runner is not None:
             defaults[SETTINGS]["task_runner"] = task_runner
         else:
@@ -732,7 +723,7 @@ class Plan:
         server_args["root_certificate"] = root_certificate
         server_args["certificate"] = certificate
         server_args["private_key"] = private_key
-        server_args["tls"] = tls
+        server_args["use_tls"] = tls
 
         server_args["aggregator"] = self.get_aggregator(tensor_dict)
 

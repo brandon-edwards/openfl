@@ -4,7 +4,7 @@
 .. _python_native_pytorch_mnist:
 
 ==========================================
-Python Native API: Federated PyTorch MNIST
+Python Native API: Federated PyTorch MNIST (Deprecated)
 ==========================================
 
 In this tutorial, we will set up a federation and train a basic PyTorch model on the MNIST dataset using the Python Native API.
@@ -12,14 +12,14 @@ See `full notebook <https://github.com/securefederatedai/openfl/blob/f1657abe886
 
 .. note::
 
-    Ensure you have installed the |productName| package.
+    Ensure you have installed the OpenFL package.
 
-    See :ref:`install_package` for details.
+    See :ref:`installation` for details.
 
 
 Install additional dependencies if not already installed
 
-.. code-block:: console
+.. code-block:: shell
 
     $ pip install torch torchvision
 

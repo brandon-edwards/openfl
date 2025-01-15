@@ -2,8 +2,10 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 """CLI module."""
+
 import logging
 import os
+import re
 import sys
 import time
 import warnings
@@ -181,6 +183,20 @@ def cli(context, log_level, no_warnings):
         # This will be overridden later with user selected debugging level
         disable_warnings()
     log_file = os.getenv("LOG_FILE")
+    # Validate log_file with tighter restrictions
+    if log_file:
+        log_file = os.path.normpath(log_file)
+        if (
+            not re.match(r"^logs/[\w\-.]+$", log_file)
+            or ".." in log_file
+            or log_file.startswith("/")
+        ):
+            raise ValueError("Invalid log file path")
+        # Ensure the log file is in the 'logs' directory
+        allowed_directory = Path("logs").resolve()
+        full_path = (allowed_directory / log_file).resolve()
+        if not str(full_path).startswith(str(allowed_directory)):
+            raise ValueError("Log file path is not allowed")
     setup_logging(log_level, log_file)
     sys.stdout.reconfigure(encoding="utf-8")
 
@@ -304,14 +320,13 @@ def entry():
     root = Path(__file__).parent.resolve()
 
     if experimental.exists():
-        root = root.parent.joinpath("experimental", "interface", "cli").resolve()
+        root = root.parent.joinpath("experimental", "workflow", "interface", "cli").resolve()
 
     work = Path.cwd().resolve()
     path.append(str(root))
     path.insert(0, str(work))
 
     for module in root.glob("*.py"):  # load command modules
-
         package = module.parent
         module = module.name.split(".")[0]
 

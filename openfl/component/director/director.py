@@ -368,7 +368,7 @@ class Director:
         if not shard_info:
             raise ShardNotFoundError(f"Unknown shard {envoy_name}")
 
-        shard_info["is_online"]: True
+        shard_info["is_online"] = True
         shard_info["is_experiment_running"] = is_experiment_running
         shard_info["valid_duration"] = 2 * self.envoy_health_check_period
         shard_info["last_updated"] = time.time()
@@ -460,7 +460,6 @@ class Director:
         loop = asyncio.get_event_loop()
         while True:
             async with self.experiments_registry.get_next_experiment() as experiment:
-
                 # Review experiment block starts.
                 if self.review_plan_callback:
                     if not await experiment.review_experiment(self.review_plan_callback):

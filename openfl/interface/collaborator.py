@@ -3,6 +3,7 @@
 
 
 """Collaborator module."""
+
 import os
 import sys
 from glob import glob
@@ -63,23 +64,8 @@ def collaborator(context):
     required=True,
     help="The certified common name of the collaborator",
 )
-@option(
-    "-s",
-    "--secure",
-    required=False,
-    help="Enable Intel SGX Enclave",
-    is_flag=True,
-    default=False,
-)
-def start_(plan, collaborator_name, data_config, secure):
-    """Start a collaborator service.
-
-    Args:
-        plan (str): Federated learning plan.
-        collaborator_name (str): The certified common name of the collaborator.
-        data_config (str): The data set/shard configuration file.
-        secure (bool): Enable Intel SGX Enclave.
-    """
+def start_(plan, collaborator_name, data_config):
+    """Start a collaborator service."""
 
     if plan and is_directory_traversal(plan):
         echo("Federated learning plan path is out of the openfl workspace scope.")
@@ -115,6 +101,10 @@ def start_(plan, collaborator_name, data_config, secure):
 )
 @option("-s", "--silent", help="Do not prompt", is_flag=True)
 def create_(collaborator_name, data_path, silent):
+    create(collaborator_name, data_path, silent)
+
+
+def create(collaborator_name, data_path, silent):
     """Creates a user for an experiment.
 
     Args:
@@ -122,7 +112,6 @@ def create_(collaborator_name, data_path, silent):
         data_path (str): The data path to be associated with the collaborator.
         silent (bool): Do not prompt.
     """
-
     if data_path and is_directory_traversal(data_path):
         echo("Data path is out of the openfl workspace scope.")
         sys.exit(1)
@@ -238,7 +227,6 @@ def generate_cert_request(collaborator_name, silent, skip_package):
     write_key(client_private_key, CERT_DIR / "client" / f"{file_name}.key")
 
     if not skip_package:
-
         archive_type = "zip"
         archive_name = f"col_{common_name}_to_agg_cert_request"
         archive_file_name = archive_name + "." + archive_type
@@ -302,7 +290,6 @@ def register_collaborator(file_name):
         doc["collaborators"] = []  # Create empty list
 
     if col_name in doc["collaborators"]:
-
         echo(
             "\nCollaborator "
             + style(f"{col_name}", fg="green")
@@ -311,7 +298,6 @@ def register_collaborator(file_name):
         )
 
     else:
-
         doc["collaborators"].append(col_name)
         with open(cols_file, "w", encoding="utf-8") as f:
             dump(doc, f)
@@ -346,16 +332,7 @@ def register_collaborator(file_name):
     help="Import the archive containing the collaborator's" " certificate (signed by the CA)",
 )
 def certify_(collaborator_name, silent, request_pkg, import_):
-    """Certify the collaborator.
-
-    Args:
-        collaborator_name (str): The certified common name of the collaborator.
-        silent (bool): Do not prompt.
-        request_pkg (str): The archive containing the certificate signing
-            request (*.zip) for a collaborator.
-        import_ (str): Import the archive containing the collaborator's
-            certificate (signed by the CA).
-    """
+    """Certify the collaborator."""
     certify(collaborator_name, silent, request_pkg, import_)
 
 
@@ -427,26 +404,20 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False):
 
         signing_crt = read_crt(CERT_DIR / signing_crt_path)
 
-        echo(
-            "The CSR Hash for file "
-            + style(f"{file_name}.csr", fg="green")
-            + " = "
-            + style(f"{csr_hash}", fg="red")
-        )
+        echo(f"The CSR Hash for file {file_name}.csr is {csr_hash}")
 
         if silent:
-
-            echo(" Signing COLLABORATOR certificate")
-            echo(" Warning: manual check of certificate hashes is bypassed in silent mode.")
+            echo(
+                "Signing COLLABORATOR certificate, "
+                "Warning: manual check of certificate hashes is bypassed in silent mode."
+            )
             signed_col_cert = sign_certificate(csr, signing_key, signing_crt.subject)
             write_crt(signed_col_cert, f"{cert_name}.crt")
             register_collaborator(CERT_DIR / "client" / f"{file_name}.crt")
 
         else:
-
             echo("Make sure the two hashes above are the same.")
             if confirm("Do you want to sign this certificate?"):
-
                 echo(" Signing COLLABORATOR certificate")
                 signed_col_cert = sign_certificate(csr, signing_key, signing_crt.subject)
                 write_crt(signed_col_cert, f"{cert_name}.crt")
@@ -485,13 +456,17 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False):
         rmtree(tmp_dir)
 
     else:
-        # Copy the signed certificate and cert chain into PKI_DIR
-        previous_crts = glob(f"{CERT_DIR}/client/*.crt")
-        unpack_archive(import_, extract_dir=CERT_DIR)
-        updated_crts = glob(f"{CERT_DIR}/client/*.crt")
-        cert_difference = list(set(updated_crts) - set(previous_crts))
-        if len(cert_difference) != 0:
-            crt = basename(cert_difference[0])
-            echo(f"Certificate {crt} installed to PKI directory")
-        else:
-            echo("Certificate updated in the PKI directory")
+        _import_certificates(import_)
+
+
+def _import_certificates(archive: str):
+    # Copy the signed certificate and cert chain into PKI_DIR
+    previous_crts = glob(f"{CERT_DIR}/client/*.crt")
+    unpack_archive(archive, extract_dir=CERT_DIR)
+    updated_crts = glob(f"{CERT_DIR}/client/*.crt")
+    cert_difference = list(set(updated_crts) - set(previous_crts))
+    if len(cert_difference) != 0:
+        crt = basename(cert_difference[0])
+        echo(f"Certificate {crt} installed to PKI directory")
+    else:
+        echo("Certificate updated in the PKI directory")

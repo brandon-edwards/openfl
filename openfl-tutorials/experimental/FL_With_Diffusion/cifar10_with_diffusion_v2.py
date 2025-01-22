@@ -420,6 +420,15 @@ class FederatedFlow(FLSpec):
         self.train_data_size = len(self.train_loader)
         self.test_data_size = len(self.test_loader)
 
+        """
+        Temporary test to see that we can modify the training loader
+        """
+        if self.input == 'col0':
+            print(f"The datasets of the loaders for {self.intput} have lengths {[len(self.trainloder[idx].dataset) for idx in range(num_cols)]}")
+            raise ValueError(f"Stopping test.")
+        else:
+            raise ValueError(f"Stopping test.")
+
         self.model.to(self.device)
         self.optimizer = default_optimizer(
             model=self.model, optimizer_like=self.optimizers[self.input], learning_rate=self.learning_rate
@@ -695,6 +704,18 @@ if __name__ == "__main__":
         default=10,
         help="Random seed for model initialization",
     )
+    argparser.add_argument(
+        "--restoreall_to_one_col",
+        type=str,
+        default=None,
+        help="String for collaborator number to which to restore all of a single class withheld",
+    )
+    argparser.add_argument(
+        "--class_to_restoreall",
+        type=str,
+        default=None,
+        help="String for which class if any to restore all to one collaborator"
+    )
     
     args = argparser.parse_args()
     held_classes = [int(target_class) for target_class in args.held_classes]
@@ -703,12 +724,19 @@ if __name__ == "__main__":
     learning_rate = args.learning_rate
     hold_from_cols = [int(col_num) for col_num in args.hold_from_cols]
     synth_to_cols = [int(col_num) for col_num in args.synth_to_cols]
+    restoreall_to_one_col = int(args.restoreall_to_one_col)
+    class_to_restoreall = int(args.class_to_restoreall)
 
     # set the random seed for repeatable results
     model_seed = args.model_seed
     torch.manual_seed(model_seed)
 
     # validate certain aspects of the comma separated arguments
+    if restoreall_to_one_col:
+        if restoreall_to_one_col not in hold_from_cols:
+            raise ValueError(f"restore_all_to_one_col needs to be in hold_from_cols")
+        if restoreall_to_one_col in synth_to_cols:
+            raise ValueError(f"For now, we're avoiding supplmenting a full class with sythetics ... if you change this consider addressing class balance issue.")
 
     # there should not be repeat entries in the held and synth classes
     if len(set(held_classes)) != len(held_classes):
@@ -825,7 +853,21 @@ if __name__ == "__main__":
         train_data_by_col, _ = stratified_split(dict_by_class=left_over_train_by_class, n_parts=num_cols, shuffle=True, shuffle_seed=shuffle_seed)
         # now splitting the initially held classes (may put some back accoring to entries in hold_from_cols)
         if initial_held_train_by_class:
-            initial_held_train_by_col, target_counts_by_class_by_split = stratified_split(dict_by_class=initial_held_train_by_class, n_parts=num_cols, shuffle=True, shuffle_seed=shuffle_seed)
+            if restoreall_to_one_col:
+                class_to_restoreall_by_col, class_to_restoreall_counts_by_split = stratified_split(dict_by_class={class_to_restoreall: initial_held_train_by_class[class_to_restoreall]}, 
+                                                                                                   n_parts=num_cols, 
+                                                                                                   shuffle=True, 
+                                                                                                   shuffle_seed=shuffle_seed)
+
+                initial_held_train_by_col, target_counts_by_class_by_split = stratified_split(dict_by_class={_class: initial_held_train_by_class[_class] for _class in initial_held_train_by_class if (_class != class_to_restoreall)}, 
+                                                                                              n_parts=num_cols, 
+                                                                                              shuffle=True, 
+                                                                                              shuffle_seed=shuffle_seed)
+            else:
+                initial_held_train_by_col, target_counts_by_class_by_split = stratified_split(dict_by_class=initial_held_train_by_class, 
+                                                                                              n_parts=num_cols, 
+                                                                                              shuffle=True, 
+                                                                                              shuffle_seed=shuffle_seed) 
         else:
             initial_held_train_by_col = None
             target_counts_by_class = {idx: 0 for idx in range(10)}
@@ -836,8 +878,10 @@ if __name__ == "__main__":
         if initial_held_train_by_col:
             for col_num in initial_held_train_by_col:
                 if col_num not in hold_from_cols:
-                    # put back the target classes
-                    train_data_by_col[col_num] = combine_dicts(*[train_data_by_col[col_num], initial_held_train_by_col[col_num]], shuffle=True, shuffle_seed=shuffle_seed)
+                        train_data_by_col[col_num] = combine_dicts(*[train_data_by_col[col_num], initial_held_train_by_col[col_num]], shuffle=True, shuffle_seed=shuffle_seed)
+                elif col_num == restoreall_to_one_col:
+                    # here the train_data is of a different type TODO: improve this ... is a list of length num_cols with each entry holding a different shard of the class to restore (so class balance is established for each)
+                    train_data_by_col[col_num] = [combine_dicts(*[train_data_by_col[col_num], class_to_restoreall_by_col[other_col_num]], shuffle=True, shuffle_seed=shuffle_seed) for other_col_num in range(num_cols)]
                 elif col_num in synth_to_cols:
                     # here is where we assume only cols who get held from will be supplemented (will restore sythetics in same count as real were pulled)
                     supp_images = None

@@ -24,9 +24,9 @@ from torchvision.models import convnext_base
 import numpy as np
 from functools import partial
 
-from openfl.experimental.interface import FLSpec, Aggregator, Collaborator
-from openfl.experimental.runtime import LocalRuntime
-from openfl.experimental.placement import aggregator, collaborator
+from openfl.experimental.workflow.interface import FLSpec, Aggregator, Collaborator
+from openfl.experimental.workflow.runtime import LocalRuntime
+from openfl.experimental.workflow.placement import aggregator, collaborator
 import torchvision.transforms as transforms
 import pickle
 import pandas as pd
@@ -423,11 +423,11 @@ class FederatedFlow(FLSpec):
         """
         Temporary test to see that we can modify the training loader
         """
-        if self.input == 'col0':
-            print(f"The datasets of the loaders for {self.intput} have lengths {[len(self.trainloder[idx].dataset) for idx in range(num_cols)]}")
+        if self.input == 'Col_0':
+            print(f"The datasets of the loaders for {self.input} have lengths {[len(self.train_loader[idx].dataset) for idx in range(num_cols)]}")
             raise ValueError(f"Stopping test.")
         else:
-            raise ValueError(f"Stopping test.")
+            raise ValueError(f"Stopping test at self.input=={self.input}.")
 
         self.model.to(self.device)
         self.optimizer = default_optimizer(
@@ -718,6 +718,10 @@ if __name__ == "__main__":
     )
     
     args = argparser.parse_args()
+
+    print(f"\nRunning with args:\n{args}\n\n")
+
+    # Let's always use the integers to track the classes and col numbers (as opposed to strings)
     held_classes = [int(target_class) for target_class in args.held_classes]
     synth_classes = [int(target_class) for target_class in args.synth_classes]
     num_cols = args.num_cols
@@ -732,11 +736,15 @@ if __name__ == "__main__":
     torch.manual_seed(model_seed)
 
     # validate certain aspects of the comma separated arguments
-    if restoreall_to_one_col:
+    if restoreall_to_one_col is not None:
+        if (restoreall_to_one_col in synth_to_cols) and (class_to_restoreall in synth_classes):
+            raise ValueError(f"We do not currently support supplementing with synthetics (you've asked for synthetic classes: {synth_classes}) to a collaborator that is getting one of those classes ({class_to_restoreall}) restored completely.")
         if restoreall_to_one_col not in hold_from_cols:
             raise ValueError(f"restore_all_to_one_col needs to be in hold_from_cols")
         if restoreall_to_one_col in synth_to_cols:
             raise ValueError(f"For now, we're avoiding supplmenting a full class with sythetics ... if you change this consider addressing class balance issue.")
+        if hold_from_cols != [idx for idx in range(num_cols)]:
+            raise ValueError(f"If using restore_to_one_col, this held class must be held from all cols.")
 
     # there should not be repeat entries in the held and synth classes
     if len(set(held_classes)) != len(held_classes):
@@ -765,7 +773,7 @@ if __name__ == "__main__":
 
     # some hard coded paths
     module_path = os.path.dirname(os.path.realpath(__file__))
-    fpath_data_by_col = os.path.join(module_path, 'data', 'by_collaborator', f'data_by_col_holding_{list_to_string(held_classes)}_from_{list_to_string(hold_from_cols)}_supplementing_{list_to_string(synth_to_cols)}_num_cols_{num_cols}_with_synth_classes_{list_to_string(synth_classes)}.npy')
+    fpath_data_by_col = os.path.join(module_path, 'data', 'by_collaborator', f'data_by_col_holding_{list_to_string(held_classes)}_from_{list_to_string(hold_from_cols)}_supplementing_{list_to_string(synth_to_cols)}_num_cols_{num_cols}_with_synth_classes_{list_to_string(synth_classes)}_restoreall_{class_to_restoreall}_to_col_{restoreall_to_one_col}.npy')
     fpath_results_df = os.path.join(module_path, 'Results', f'v2fed_results_missing_{list_to_string(held_classes)}_holding_from_{list_to_string(hold_from_cols)}_supplementing_{list_to_string(synth_to_cols)}_with_synth_classes_{list_to_string(synth_classes)}_lr_{learning_rate}_num_cols_{num_cols}_model_seed_{model_seed}.csv')
     fpaths_synthetic_data = {target_class: f"/home/edwardsb/repositories/nvidia_edm/class_{target_class}_batchsize_64_266_batches.pkl"for target_class in synth_classes}
     
@@ -826,8 +834,10 @@ if __name__ == "__main__":
     
     # First check whether the results are on disk
     if os.path.exists(fpath_data_by_col):
+        print(f"\nLocated by col data on disk and so loading...\n")
         train_data_by_col, test_data_by_col = np.load(fpath_data_by_col, allow_pickle=True)
     else:
+        print(f"\nConstructing by col data...\n")
         train_dict = features_labels_to_dict(features=train_dataset.data, labels=train_dataset.targets)
         test_dict = features_labels_to_dict(features=test_dataset.data, labels=test_dataset.targets)
         
@@ -852,45 +862,67 @@ if __name__ == "__main__":
         print(f"Splitting left over train data (after holding held_classes) in a stratified manor.")
         train_data_by_col, _ = stratified_split(dict_by_class=left_over_train_by_class, n_parts=num_cols, shuffle=True, shuffle_seed=shuffle_seed)
         # now splitting the initially held classes (may put some back accoring to entries in hold_from_cols)
-        if initial_held_train_by_class:
-            if restoreall_to_one_col:
-                class_to_restoreall_by_col, class_to_restoreall_counts_by_split = stratified_split(dict_by_class={class_to_restoreall: initial_held_train_by_class[class_to_restoreall]}, 
+        if initial_held_train_by_class is not None:
+            if restoreall_to_one_col is not None:
+                # here the class to resore all is handled separately
+                print(f"\nPerforming stratified split, but preparing to restore all.\n")
+                class_to_restoreall_by_split, class_to_restoreall_counts_by_split = stratified_split(dict_by_class={class_to_restoreall: initial_held_train_by_class[class_to_restoreall]}, 
                                                                                                    n_parts=num_cols, 
                                                                                                    shuffle=True, 
                                                                                                    shuffle_seed=shuffle_seed)
 
-                initial_held_train_by_col, target_counts_by_class_by_split = stratified_split(dict_by_class={_class: initial_held_train_by_class[_class] for _class in initial_held_train_by_class if (_class != class_to_restoreall)}, 
+                other_than_restoreall_class_by_col, other_than_restoreall_class_counts_by_split = stratified_split(dict_by_class={_class: initial_held_train_by_class[_class] for _class in initial_held_train_by_class if (_class != class_to_restoreall)}, 
                                                                                               n_parts=num_cols, 
                                                                                               shuffle=True, 
                                                                                               shuffle_seed=shuffle_seed)
+                # here we may supplement also, and we want to be able to keep track of supplement class counts in one dictionary
+                target_counts = class_to_restoreall_counts_by_split
+                target_counts.update(other_than_restoreall_class_counts_by_split)
             else:
+                print(f"\nPerforming stratified split and will not be restoring all to any.\n")
                 initial_held_train_by_col, target_counts_by_class_by_split = stratified_split(dict_by_class=initial_held_train_by_class, 
                                                                                               n_parts=num_cols, 
                                                                                               shuffle=True, 
-                                                                                              shuffle_seed=shuffle_seed) 
+                                                                                              shuffle_seed=shuffle_seed)
+                target_counts = target_counts_by_class_by_split 
         else:
-            initial_held_train_by_col = None
-            target_counts_by_class = {idx: 0 for idx in range(10)}
+            print(f"\nNo classes held and so not requiring to stratified split any held data.\n")
         
 
         # keep track of which synthetic samples have already been used
         offset_target_data_idx_by_class = {target_class: 0 for target_class in synthetic_data}
-        if initial_held_train_by_col:
-            for col_num in initial_held_train_by_col:
-                if col_num not in hold_from_cols:
+        # synthetic replacement falls only under this first conditional as we assume supplmenting only occurs when the classes have beeen held
+        if initial_held_train_by_class is not None:
+            if restoreall_to_one_col is not None:
+                # here one class (which must belong to held_classes) must be listed as held from all cols (this is enforced above) and is completely restored to one in the form of num_cols different loaders (to maintane class balance in each)
+                for col_num in range(num_cols):
+                    if col_num == restoreall_to_one_col:
+                        # first restore the non-restoreall class
+                        train_data_by_col[col_num] = combine_dicts(*[train_data_by_col[col_num], other_than_restoreall_class_by_col[col_num]], shuffle=True, shuffle_seed=shuffle_seed)
+                        # now create num_col loaders each that holds a shard of the restoreall class
+                        train_data_by_col[col_num] = [combine_dicts(*[train_data_by_col[col_num], class_to_restoreall_by_split[other_col_num]], shuffle=True, shuffle_seed=shuffle_seed) for other_col_num in range(num_cols)]
+                    else:
+                        # here they do not get the restoreall class (an assumption that is enforced above against what is designated in the hold_from_cols)
+                        train_data_by_col[col_num] = [combine_dicts(*[train_data_by_col[col_num], other_than_restoreall_class_by_col[other_col_num]], shuffle=True, shuffle_seed=shuffle_seed) for other_col_num in range(num_cols)]
+                    
+                     
+            else:
+                for col_num in range(num_cols):
+                    if col_num not in hold_from_cols:
+                        # here replace the  held data shard (so only the portion of that class in size of an equal split among all cols)
                         train_data_by_col[col_num] = combine_dicts(*[train_data_by_col[col_num], initial_held_train_by_col[col_num]], shuffle=True, shuffle_seed=shuffle_seed)
-                elif col_num == restoreall_to_one_col:
-                    # here the train_data is of a different type TODO: improve this ... is a list of length num_cols with each entry holding a different shard of the class to restore (so class balance is established for each)
-                    train_data_by_col[col_num] = [combine_dicts(*[train_data_by_col[col_num], class_to_restoreall_by_col[other_col_num]], shuffle=True, shuffle_seed=shuffle_seed) for other_col_num in range(num_cols)]
-                elif col_num in synth_to_cols:
+                    
+            # now supplement if needed        
+            for col_num in range(num_cols):  
+                if col_num in synth_to_cols:
+                    # recall we only currently supplement in the case that classes have been held
                     # here is where we assume only cols who get held from will be supplemented (will restore sythetics in same count as real were pulled)
                     supp_images = None
                     supp_labels = None
                     for target_class in synth_classes:
                         X_supp, Y_supp = synthetic_data[target_class]
-
                         start = offset_target_data_idx_by_class[target_class]
-                        end = start + target_counts_by_class_by_split[target_class][col_num]
+                        end = start + target_counts[target_class][col_num]
                         offset_target_data_idx_by_class[target_class] = end
 
                         if end > len(X_supp):

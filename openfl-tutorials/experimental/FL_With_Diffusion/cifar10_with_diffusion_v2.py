@@ -13,7 +13,6 @@
 #    I will perform 3 different approaches (differeing in how train data looks across cols): 
 #         - normal federation for baseline (stratified split)
 #         - col 0 has real frogs and cols 1 & 2 have synthetic frogs
-#         - cols 0, 1, and 2 all have synthetic frogs
 
 from copy import deepcopy
 import torch.nn as nn
@@ -43,6 +42,7 @@ import warnings
 
 sys.path.append("/home/edwardsb/repositories/be-SATGOpenFL/openfl-tutorials/experimental/FL_With_Diffusion")
 from data_utils import split_data_by_class, stratified_split, combine_dicts, features_labels_to_dict, split_off_classes
+from experiment_utils import get_results_path
 
 warnings.filterwarnings("ignore")
 
@@ -50,12 +50,14 @@ batch_size_train = 1024
 batch_size_test = 1024
 # changed learning rate to come in via arguments
 # learning_rate = 0.2
-momentum = 0.9
+# momentum = 0.9
 log_interval = 10
 
 
 # we will use the convnext model
 Net = partial(convnext_base, num_classes=10)
+
+
 
 def default_optimizer(model, learning_rate, optimizer_type=None, optimizer_like=None):
     """
@@ -384,6 +386,18 @@ class FederatedFlow(FLSpec):
         print(f"Round {self.round_num}...")
         print(20 * "#")
 
+    def _get_round_loader(self):
+        if isinstance(self.train_loader, list):
+            residue = self.round_num % num_cols
+            print(f"\nGot a list for a loader for col: {self.input}")
+            print(f"Getting round_loader using residue {residue}.\n")
+            round_train_loader = self.train_loader[residue]
+        else:
+            round_train_loader = self.train_loader
+
+        print(f"{self.input} has loader lengths train: {len(round_train_loader.dataset)} test: {len(self.test_loader.dataset)}")
+        return round_train_loader
+
     @aggregator
     def start(self):
         self.start_time = time.time()
@@ -415,19 +429,13 @@ class FederatedFlow(FLSpec):
         print(
             f"Performing model training for collaborator {self.input} in round {self.round_num}"
         )
-
+        
+        
+        round_train_loader = self._get_round_loader()
+        
         # store data size for later use (currently allowing these to get overwritten repeatedly)
-        self.train_data_size = len(self.train_loader)
+        self.train_data_size = len(round_train_loader)
         self.test_data_size = len(self.test_loader)
-
-        """
-        Temporary test to see that we can modify the training loader
-        """
-        if self.input == 'Col_0':
-            print(f"The datasets of the loaders for {self.input} have lengths {[len(self.train_loader[idx].dataset) for idx in range(num_cols)]}")
-            raise ValueError(f"Stopping test.")
-        else:
-            raise ValueError(f"Stopping test at self.input=={self.input}.")
 
         self.model.to(self.device)
         self.optimizer = default_optimizer(
@@ -453,7 +461,7 @@ class FederatedFlow(FLSpec):
 
         self.model.train()
         train_losses = []
-        for batch_idx, (data, target) in enumerate(self.train_loader):
+        for batch_idx, (data, target) in enumerate(round_train_loader):
             data = data.to(self.device)
             target = target.to(self.device)
             self.optimizer.zero_grad()
@@ -497,7 +505,7 @@ class FederatedFlow(FLSpec):
         )
         print("Train dataset performance")
         self.local_validation_score_train, self.local_validation_score_train_by_label, self.train_count_by_label = inference(
-            self.model, self.train_loader, self.device
+            self.model, self._get_round_loader(), self.device
         )
 
         print(
@@ -716,6 +724,12 @@ if __name__ == "__main__":
         default=None,
         help="String for which class if any to restore all to one collaborator"
     )
+    argparser.add_argument(
+        "--eps",
+        type=str,
+        default=None,
+        help="String for which epsilon was used for the dp training of the synthetic data generator (or None if DP not used)"
+    )
     
     args = argparser.parse_args()
 
@@ -728,8 +742,15 @@ if __name__ == "__main__":
     learning_rate = args.learning_rate
     hold_from_cols = [int(col_num) for col_num in args.hold_from_cols]
     synth_to_cols = [int(col_num) for col_num in args.synth_to_cols]
-    restoreall_to_one_col = int(args.restoreall_to_one_col)
-    class_to_restoreall = int(args.class_to_restoreall)
+    eps = args.eps
+    
+    restoreall_to_one_col = None
+    class_to_restoreall = None
+    
+    if args.restoreall_to_one_col is not None:
+        restoreall_to_one_col = int(args.restoreall_to_one_col)
+    if args.class_to_restoreall is not None:
+        class_to_restoreall = int(args.class_to_restoreall)
 
     # set the random seed for repeatable results
     model_seed = args.model_seed
@@ -772,11 +793,23 @@ if __name__ == "__main__":
     ######################################
 
     # some hard coded paths
+    if eps is None:
+        eps_string = 'None'
+    else:
+        eps_string = eps
     module_path = os.path.dirname(os.path.realpath(__file__))
+
+    if eps_string != 'None':
+        module_path = os.path.join(module_path, f'DP_RESULTS_PARDIR_eps_{eps_string}')
     fpath_data_by_col = os.path.join(module_path, 'data', 'by_collaborator', f'data_by_col_holding_{list_to_string(held_classes)}_from_{list_to_string(hold_from_cols)}_supplementing_{list_to_string(synth_to_cols)}_num_cols_{num_cols}_with_synth_classes_{list_to_string(synth_classes)}_restoreall_{class_to_restoreall}_to_col_{restoreall_to_one_col}.npy')
-    fpath_results_df = os.path.join(module_path, 'Results', f'v2fed_results_missing_{list_to_string(held_classes)}_holding_from_{list_to_string(hold_from_cols)}_supplementing_{list_to_string(synth_to_cols)}_with_synth_classes_{list_to_string(synth_classes)}_lr_{learning_rate}_num_cols_{num_cols}_model_seed_{model_seed}.csv')
-    fpaths_synthetic_data = {target_class: f"/home/edwardsb/repositories/nvidia_edm/class_{target_class}_batchsize_64_266_batches.pkl"for target_class in synth_classes}
-    
+    fpath_results_df = os.path.join(module_path, 'Results', f'v2fed_results_missing_{list_to_string(held_classes)}_holding_from_{list_to_string(hold_from_cols)}_supplementing_{list_to_string(synth_to_cols)}_with_synth_classes_{list_to_string(synth_classes)}_lr_{learning_rate}_num_cols_{num_cols}_restoreall_{class_to_restoreall}_to_col_{restoreall_to_one_col}_model_seed_{model_seed}.csv')
+    # this was old class conditional one 
+    # fpaths_synthetic_data = {target_class: f"/home/edwardsb/repositories/nvidia_edm/class_{target_class}_batchsize_64_266_batches.pkl"for target_class in synth_classes}
+    if eps_string == 'None':
+         fpaths_synthetic_data = {6: '/raid/edwardsb/projects/fl_with_diffusion/training_outdir/00000-data_for_frog_model-uncond-ddpmpp-edm-gpus8-batch512-fp32/samples_iter_0_network-snapshot-005018.pkl'}
+    else:
+        print(f"\n\n##### USING DP data with epsilon: {eps_string}\n\n")
+        fpaths_synthetic_data = {6: f'/raid/edwardsb/projects/fl_with_diffusion/dp_model_sample_arrays/eps_{eps_string}_17024_3_32_32.pkl'}
     # some other hard coded
     shuffle_seed = 1234567
 
@@ -834,6 +867,7 @@ if __name__ == "__main__":
     
     # First check whether the results are on disk
     if os.path.exists(fpath_data_by_col):
+        # raise ValueError(f"For now dissabling precomputed data as I want to not accidentally use old data.")
         print(f"\nLocated by col data on disk and so loading...\n")
         train_data_by_col, test_data_by_col = np.load(fpath_data_by_col, allow_pickle=True)
     else:
@@ -841,11 +875,12 @@ if __name__ == "__main__":
         train_dict = features_labels_to_dict(features=train_dataset.data, labels=train_dataset.targets)
         test_dict = features_labels_to_dict(features=test_dataset.data, labels=test_dataset.targets)
         
+        
         print(f"Organizing train data by class.")
         train_data_by_class = split_data_by_class(_dict=train_dict)
-        
         print(f"Organizing test data by class.")
         test_data_by_class = split_data_by_class(_dict=test_dict)
+        
         
         # separate target classes in train data to distribute as designated
         if len(held_classes) != 0:
@@ -870,14 +905,21 @@ if __name__ == "__main__":
                                                                                                    n_parts=num_cols, 
                                                                                                    shuffle=True, 
                                                                                                    shuffle_seed=shuffle_seed)
+                
+                initially_held_other_than_class_to_restoreall = {_class: initial_held_train_by_class[_class] for _class in initial_held_train_by_class if (_class != class_to_restoreall)}
 
-                other_than_restoreall_class_by_col, other_than_restoreall_class_counts_by_split = stratified_split(dict_by_class={_class: initial_held_train_by_class[_class] for _class in initial_held_train_by_class if (_class != class_to_restoreall)}, 
-                                                                                              n_parts=num_cols, 
-                                                                                              shuffle=True, 
-                                                                                              shuffle_seed=shuffle_seed)
+                if initially_held_other_than_class_to_restoreall != {}:
+                    other_than_restoreall_class_by_col, other_than_restoreall_class_counts_by_split = stratified_split(dict_by_class=initially_held_other_than_class_to_restoreall, 
+                                                                                                n_parts=num_cols, 
+                                                                                                shuffle=True, 
+                                                                                                shuffle_seed=shuffle_seed)
+                else:
+                    other_than_restoreall_class_by_col = None
+
                 # here we may supplement also, and we want to be able to keep track of supplement class counts in one dictionary
                 target_counts = class_to_restoreall_counts_by_split
-                target_counts.update(other_than_restoreall_class_counts_by_split)
+                if other_than_restoreall_class_by_col is not None:
+                    target_counts.update(other_than_restoreall_class_counts_by_split)
             else:
                 print(f"\nPerforming stratified split and will not be restoring all to any.\n")
                 initial_held_train_by_col, target_counts_by_class_by_split = stratified_split(dict_by_class=initial_held_train_by_class, 
@@ -897,13 +939,16 @@ if __name__ == "__main__":
                 # here one class (which must belong to held_classes) must be listed as held from all cols (this is enforced above) and is completely restored to one in the form of num_cols different loaders (to maintane class balance in each)
                 for col_num in range(num_cols):
                     if col_num == restoreall_to_one_col:
-                        # first restore the non-restoreall class
-                        train_data_by_col[col_num] = combine_dicts(*[train_data_by_col[col_num], other_than_restoreall_class_by_col[col_num]], shuffle=True, shuffle_seed=shuffle_seed)
+                        # This collaborator is known to be in hold_from_cols, and so we are not restoring any of the held classes (except for the class_to_restoreall) (hence comment out below)
+                        # train_data_by_col[col_num] = combine_dicts(*[train_data_by_col[col_num], other_than_restoreall_class_by_col[col_num]], shuffle=True, shuffle_seed=shuffle_seed)
                         # now create num_col loaders each that holds a shard of the restoreall class
                         train_data_by_col[col_num] = [combine_dicts(*[train_data_by_col[col_num], class_to_restoreall_by_split[other_col_num]], shuffle=True, shuffle_seed=shuffle_seed) for other_col_num in range(num_cols)]
-                    else:
-                        # here they do not get the restoreall class (an assumption that is enforced above against what is designated in the hold_from_cols)
-                        train_data_by_col[col_num] = [combine_dicts(*[train_data_by_col[col_num], other_than_restoreall_class_by_col[other_col_num]], shuffle=True, shuffle_seed=shuffle_seed) for other_col_num in range(num_cols)]
+                    elif col_num not in hold_from_cols:
+                        if restoreall_to_one_col is not None:
+                            raise ValueError(f"The only current use of restoreall_to_one_col is for all other collaborators to be in hold_from_cols")
+                        # here they do not get the restoreall class but may get other classes back if they are not in hold_from_cols (an assumption that is enforced above against what is designated in the hold_from_cols)
+                        if other_than_restoreall_class_by_col is not None:
+                            train_data_by_col[col_num] = combine_dicts(*[train_data_by_col[col_num], other_than_restoreall_class_by_col[col_num]], shuffle=True, shuffle_seed=shuffle_seed)
                     
                      
             else:
@@ -935,13 +980,23 @@ if __name__ == "__main__":
                             supp_images = np.concatenate([supp_images, X_supp[start:end]], axis=0)
                             supp_labels = np.concatenate([supp_labels, Y_supp[start:end]], axis=0)                       
 
-                    train_data_by_col[col_num] = combine_dicts(train_data_by_col[col_num], features_labels_to_dict(features=supp_images,labels=supp_labels), shuffle=True, shuffle_seed=shuffle_seed)
+                    # if we have restored all to one col then train_data_by_col is a list
+                    if isinstance(train_data_by_col[col_num], list):
+                        # restoreall col is assumed to not be suppemented
+                        raise ValueError(f"Restorall class is assumed to not be suppmented ... something is wrong.")
+                    else:
+                        train_data_by_col[col_num] = combine_dicts(train_data_by_col[col_num], features_labels_to_dict(features=supp_images,labels=supp_labels), shuffle=True, shuffle_seed=shuffle_seed)
 
         np.save(fpath_data_by_col, (train_data_by_col, test_data_by_col))
+    if isinstance(train_data_by_col[0], list):
+        print(f"#############################################")
+        print(f"Train data by col sizes (we've restored all to collaborator 0 so that the first one is a list):")
+        print(f"In this case train_data_by_col[0] is of type: {type(train_data_by_col[0])}")
 
-    print(f"#############################################")
-    print(f"Train data by col sizes:")
-    print(f"{[len(train_data_by_col[col_num]['features']) for col_num in train_data_by_col]}\n")
+    else:
+        print(f"#############################################")
+        print(f"Train data by col sizes:")
+        print(f"{[len(train_data_by_col[col_num]['features']) for col_num in train_data_by_col]}\n")
 
     print(f"Test data by col sizes:")
     print(f"{[len(test_data_by_col[col_num]['features']) for col_num in test_data_by_col]}\n")
@@ -950,29 +1005,56 @@ if __name__ == "__main__":
 
     # this function will be called before executing collaborator steps
     # which will return private attributes dictionary for each collaborator
-    def callable_to_initialize_collaborator_private_attributes(
-        index, train_data_by_col, test_data_by_col, train_ds, test_ds, n_collaborators, args
-    ):
-        # construct the training and test and population dataset
-        local_train = deepcopy(train_ds)
-        local_test = deepcopy(test_ds)
-
-        local_train.data = train_data_by_col[index]['features']
-        local_train.targets = train_data_by_col[index]['labels']
-
-        local_test.data = test_data_by_col[index]['features']
-        local_test.targets = test_data_by_col[index]['labels']            
+    def callable_to_initialize_collaborator_private_attributes(index, 
+                                                               train_data_by_col, 
+                                                               test_data_by_col, 
+                                                               train_ds, 
+                                                               test_ds, 
+                                                               n_collaborators, 
+                                                               args):
         
-        return {
-            "train_dataset": local_train,
-            "test_dataset": local_test,
-            "train_loader": torch.utils.data.DataLoader(
-                local_train, batch_size=batch_size_train, shuffle=True
-            ),
-            "test_loader": torch.utils.data.DataLoader(
-                local_test, batch_size=batch_size_test, shuffle=False
-            ),
-        }
+        local_test = deepcopy(test_ds)
+        local_test.data = test_data_by_col[index]['features']
+        local_test.targets = test_data_by_col[index]['labels']
+
+        # if we have restored all of a class to one collaborator, then the local_train is a list (will create num_col loaders)
+        if isinstance(train_data_by_col[index], list):
+            # construct the training and test and population dataset
+            local_trains = [deepcopy(train_ds) for idx in range(num_cols)]
+
+            # here we prepare to create num_cols different train loaders (test loaders same), each of which is identical in all classes excecpt
+            # in the class, class_to_restoreall in which case it holds a different shard to be used round robin over training rounds
+            for loader_idx in range(num_cols):
+                local_trains[loader_idx].data = train_data_by_col[index][loader_idx]['features']
+                local_trains[loader_idx].targets = train_data_by_col[index][loader_idx]['labels']
+
+            return \
+                {
+                "train_loader": [torch.utils.data.DataLoader(local_trains[loader_idx], 
+                                                             batch_size=batch_size_train, 
+                                                             shuffle=True
+                                                            ) 
+                                for loader_idx in range(num_cols)],
+                "test_loader": torch.utils.data.DataLoader(local_test, 
+                                                           batch_size=batch_size_test, 
+                                                           shuffle=False
+                                                          )
+                }
+        else:
+            local_train = deepcopy(train_ds)
+            local_train.data = train_data_by_col[index]['features']
+            local_train.targets = train_data_by_col[index]['labels']           
+            
+            return {
+                    "train_loader": torch.utils.data.DataLoader(local_train, 
+                                                                batch_size=batch_size_train, 
+                                                                shuffle=True
+                                                                ),
+                    "test_loader": torch.utils.data.DataLoader(local_test, 
+                                                               batch_size=batch_size_test, 
+                                                               shuffle=False
+                                                                ),
+                    }
 
     collaborators = []
     for idx, collab_name in enumerate(collaborator_names):

@@ -86,12 +86,12 @@ hyp = {
     },
     'misc': {
         'ema': {
-            'epochs': 48, # Slight bug in that this counts only full epochs and then additionally runs the EMA for any fractional epochs at the end too
+            'epochs': 78, # Slight bug in that this counts only full epochs and then additionally runs the EMA for any fractional epochs at the end too
             'decay_base': .95,
             'decay_pow': 3.,
             'every_n_steps': 1.,
         },
-        'train_epochs': 12.1,
+        'train_epochs': 'BRANDON_NOT_USING',
         'device': 'cuda',
         'data_location': 'BRANDON_NOT_USING',
     }
@@ -265,7 +265,8 @@ def get_optimizers_and_schedulers(model, num_train_samples, batchsize, total_rou
         """
 
         # TODO: Doesn't currently account for partial epochs really (since we're not doing "real" epochs across the whole batchsize)....
-        num_steps_per_epoch      = num_train_samples // batchsize
+        # The 1.2 is a hack to account for below short counting steps
+        num_steps_per_epoch      = math.ceil(1.05 * num_train_samples / batchsize)
         total_train_steps        = math.ceil(num_steps_per_epoch * total_rounds)
 
         
@@ -325,7 +326,7 @@ def load_previous_round_model_and_optimizer_and_perform_testing(
         device: CUDA device id or "cpu"
         model_constructor: Constructor for the model object
     """
-    print(f"Loading model and optimizer state dict for round {round_num-1}")
+    # print(f"Loading model and optimizer state dict for round {round_num-1}")
     model_prevround = model_constructor()  # instantiate a new model
     model_prevround = model_prevround.to(device)
     opt_prevround, opt_bias_prevround, lr_sched_prevround, lr_sched_bias_prevround = get_optimizers_and_schedulers(model=model, 
@@ -485,6 +486,7 @@ base_fedflow_includes = ["net_ema",
                                                         "collaborators", 
                                                         "has_net_ema_val", 
                                                         "ema_epoch_start", 
+                                                        "agg_validation_score_ema",
                                                         "results_dict", 
                                                         "results_colnames", 
                                                         "metric_names", 
@@ -500,25 +502,6 @@ base_fedflow_includes = ["net_ema",
                                                         "global_lr_sched", 
                                                         "global_lr_sched_bias"]
 
-patch_includes = ["net_ema", 
-                                                        "cutmix_size", 
-                                                        "round_num", 
-                                                        "total_rounds", 
-                                                        "top_model_accuracy", 
-                                                        "aggregated_model_accuracy", 
-                                                        "collaborators", 
-                                                        "has_net_ema_val", 
-                                                        "ema_epoch_start", 
-                                                        "results_dict", 
-                                                        "results_colnames", 
-                                                        "metric_names", 
-                                                        "model_seed", 
-                                                        "fpath_results_df", 
-                                                        "flow_internal_loop_test", 
-                                                        "global_model",
-                                                        "model", 
-                                                        "device",  
-                                                        "projected_ema_decay_val"]
 
 private_includes = ["train_loader", "test_loader"]
 opt_includes = ["opt", "opt_bias", "lr_sched", "lr_sched_bias"]
@@ -572,6 +555,7 @@ class FederatedFlow(FLSpec):
         
         self.net_ema = None
         self.has_net_ema_val = False
+        self.agg_validation_score_ema = 0.0
         self.ema_epoch_start = math.floor(self.total_rounds) - hyp['misc']['ema']['epochs']
         self.cutmix_size = hyp['net']['cutmix_size']
 
@@ -620,9 +604,12 @@ class FederatedFlow(FLSpec):
                 f"{self.input} in round {self.round_num}"
             )
         )
+        # print(f"AT INFERENCE GLOBAL - The global model first parameter is: {self.global_model.state_dict()['net_dict.conv_group_1.conv2.weight'][30:33][2][0][0]}\n")
         self.agg_validation_score, self.agg_validation_score_by_label, self.test_count_by_label = inference(self.model, self.test_loader, self.device)
         if self.net_ema is not None:
+            # print(f"AT INFERENCE EMA - The net_ema very first parameter is: {self.net_ema.state_dict()['net_ema.net_dict.conv_group_1.conv2.weight'][30:33][2][0][0]}\n")
             self.agg_validation_score_ema, self.agg_validation_score_by_label_ema, self.test_count_by_label_ema = inference(self.net_ema, self.test_loader, self.device)
+            # print(f"\n\n##### \n#\n#\n Got EMA validation score: {self.agg_validation_score_ema}\n# \n#\n #####\n\n")         
             self.has_net_ema_val = True
         print(f"{self.input} value of {self.agg_validation_score} and by label: {self.agg_validation_score_by_label}")
         self.collaborator_name = self.input
@@ -712,8 +699,8 @@ class FederatedFlow(FLSpec):
             # Note: In hlb code they apply these before batching. I don't think that matters.
             # print(f"BEFORE AUG - Data: {data.shape, data.dtype}, Target: {target.shape, target.dtype}")
             data = batch_flip_lr(data)
+            
             data, target = batch_cutmix(data, target, patch_size=self.cutmix_size)
-            # print(f"AFTER AUG - Data: {data.shape, data.dtype}, Target: {target.shape, target.dtype}")
              
             # Send the images to an (in beta) channels_last to help improve tensor core occupancy (and reduce NCHW <-> NHWC thrash) during training
             data = data.to(memory_format=torch.channels_last)   
@@ -791,7 +778,7 @@ class FederatedFlow(FLSpec):
                 f"{self.input} in round {self.round_num}"
             )
         )
-        print(self.device)
+        # print(self.device)
         start_time = time.time()
 
         print("Test dataset performance")
@@ -810,7 +797,7 @@ class FederatedFlow(FLSpec):
                 f"{self.input}: {self.local_validation_score}"
             )
         )
-        print(f"local validation time cost {(time.time() - start_time)}")
+        # print(f"local validation time cost {(time.time() - start_time)}")
 
         self.next(self.join, include=base_fedflow_includes + private_includes + ["train_data_size", "test_data_size", "test_count_by_label", "loss", "agg_validation_score", "agg_validation_score_by_label", "local_validation_score", "local_validation_score_by_label", "collaborator_name"])
 
@@ -865,22 +852,9 @@ class FederatedFlow(FLSpec):
         for label in range(10):
             self.aggregated_model_accuracy_by_label[label] = np.average([input.agg_validation_score_by_label[label] for input in inputs], weights=col_weights_by_label_test[label])
         self.local_model_accuracy = np.average([input.local_validation_score for input in inputs], weights=col_weights_test)
-        if self.has_net_ema_val:
+        if inputs[0].has_net_ema_val:
             self.aggregated_model_accuracy_ema = np.average([input.agg_validation_score_ema for input in inputs], weights=col_weights_test)
-
-        # from the hlb code
-        # The hlb code updates ema on a step basis, but we do so every round
-        print(f"\n##############\nRound num: {self.round_num}, self.ema_epoch_start: {self.ema_epoch_start} ema None: {self.net_ema == None}\n#############\n")
-        if self.round_num >= self.ema_epoch_start:          
-            ## Initialize the ema from the network at this point in time if it does not already exist.... :D
-            if self.net_ema is None: # don't snapshot the network yet if so!
-                print(f"Initializing ema at round {self.round_num}")
-                self.net_ema = NetworkEMA(self.global_model)
-            else:
-                # We warm up our ema's decay/momentum value over training exponentially according to the hyp config dictionary (this lets us move fast, then average strongly at the end).
-                # We use rounds in instead of steps 
-                print(f"Updating ema at round {self.round_num}" )
-                self.net_ema.update(self.global_model, decay=self.projected_ema_decay_val*(self.round_num/self.total_rounds)**hyp['misc']['ema']['decay_pow'])
+            # print(f"\n\n##### \n#\n#\n Aggregating EMA validation score: {self.aggregated_model_accuracy_ema}\n# \n#\n #####\n\n")
 
         # Storing cross collaborator aggregated results now so that I don't have to know datasizes later
         for label in range(10):
@@ -909,7 +883,7 @@ class FederatedFlow(FLSpec):
         self.results_dict[self.results_colnames["MetVal"]].append(self.average_loss)
         self.results_dict[self.results_colnames["ModelSeed"]].append(self.model_seed)
         
-        if self.has_net_ema_val:
+        if inputs[0].has_net_ema_val:
             # ema test results also to results
             self.results_dict[self.results_colnames["Round"]].append(self.round_num)
             self.results_dict[self.results_colnames["Loc"]].append("All") # col name or 'All"
@@ -921,7 +895,7 @@ class FederatedFlow(FLSpec):
         
         print("\n####################################################################")
         print(f"Average aggregated model validation values = {self.aggregated_model_accuracy}")
-        if self.has_net_ema_val:
+        if inputs[0].has_net_ema_val:
             print(f"Average aggregated ema model validation values = {self.aggregated_model_accuracy_ema}")
         print(f"Average training loss = {self.average_loss}")
         print(f"Average local model validation values = {self.local_model_accuracy}")
@@ -933,8 +907,32 @@ class FederatedFlow(FLSpec):
             results_df = pd.DataFrame(self.results_dict)
             results_df.to_csv(self.fpath_results_df, index=False)
 
+        # print(f"Aggregating local models into self.model ...")
         self.model = FedAvg([input.model.cpu() for input in inputs])
+
+        # print(f"BEFORE GLOBAL ASSIGNMENT from MODEL - The global model first parameter is: {self.global_model.state_dict()['net_dict.conv_group_1.conv2.weight'][30:33][2][0][0]}\n")
         self.global_model.load_state_dict(deepcopy(self.model.state_dict()))
+        # print(f"AFTER GLOBAL ASSIGNMENT from MODEL - The global model first parameter is: {self.global_model.state_dict()['net_dict.conv_group_1.conv2.weight'][30:33][2][0][0]}\n")
+        
+        # from the hlb code (handle exponential moving average model creation or update)
+        # The hlb code updates ema on a step basis, but we do so every round
+        # print(f"\n##############\nRound num: {self.round_num}, self.ema_epoch_start: {self.ema_epoch_start} ema None: {self.net_ema == None}\n#############\n")
+        if self.round_num >= self.ema_epoch_start:          
+            ## Initialize the ema from the network at this point in time if it does not already exist.... :D
+            if self.net_ema is None: # don't snapshot the network yet if so!
+                # print(f"Initializing ema at round {self.round_num}")
+                self.net_ema = NetworkEMA(self.global_model) # [30:33][32][0][0]
+            else:
+                # We warm up our ema's decay/momentum value over training exponentially according to the hyp config dictionary (this lets us move fast, then average strongly at the end).
+                # We use rounds in instead of steps
+                # print(f"\nUpdating ema at round {self.round_num} with decay {self.projected_ema_decay_val*(self.round_num/self.total_rounds)**hyp['misc']['ema']['decay_pow']}" )
+                # print(f"BEFORE UPDATE - The net_ema very first parameter is: {self.net_ema.state_dict()['net_ema.net_dict.conv_group_1.conv2.weight'].shape}")
+                # print(f"BEFORE UPDATE - The net_ema very first parameter is: {self.net_ema.state_dict()['net_ema.net_dict.conv_group_1.conv2.weight'][30:33][2][0][0]}")
+                self.net_ema.update(self.global_model, decay=self.projected_ema_decay_val*(self.round_num/self.total_rounds)**hyp['misc']['ema']['decay_pow'])
+                # print(f"AFTER UPDATE - The net_ema very first parameter is: {self.net_ema.state_dict()['net_ema.net_dict.conv_group_1.conv2.weight'].shape}\n")
+                # print(f"AFTER UPDATE - The net_ema very first parameter is: {self.net_ema.state_dict()['net_ema.net_dict.conv_group_1.conv2.weight'][30:33][2][0][0]}\n")
+
+                # print(f"AFTER EMA UPDATE - The global model first parameter is: {self.global_model.state_dict()['net_dict.conv_group_1.conv2.weight'][30:33][2][0][0]}\n")
 
         # NOTE: recall opts and schedulers were set to global at end of train method. We'll take the ones from col 0 to carry forward (as only one can carry forward here)
         self.global_opt = deepcopy(inputs[0].global_opt)
@@ -1343,8 +1341,15 @@ if __name__ == "__main__":
             col_train_labels = torch.tensor(col_train_labels, dtype=torch.int64)
             col_test_labels = torch.tensor(col_test_labels, dtype=torch.int64)
 
+            # Pad the GPU training dataset
+            if hyp['net']['pad_amount'] > 0:
+                ## Uncomfortable shorthand, but basically we pad evenly on all _4_ sides with the pad_amount specified in the original dictionary
+                col_train_feats = F.pad(col_train_feats, (hyp['net']['pad_amount'],)*4, 'reflect')
+                col_test_feats = F.pad(col_test_feats, (hyp['net']['pad_amount'],)*4, 'reflect')
 
-
+            # half precision conversion
+            col_train_feats = col_train_feats.half().requires_grad_(False)
+            col_test_feats = col_test_feats.half().requires_grad_(False)
 
             col_data_train_std, col_data_train_mean = torch.std_mean(col_train_feats, dim=(0, 2, 3)) # dynamically calculate the std and mean from the data. this shortens the code and should help us adapt to new datasets!
 
@@ -1358,12 +1363,6 @@ if __name__ == "__main__":
             col_train_feats = batch_normalize_images(col_train_feats).half().requires_grad_(False)
             col_test_feats  = batch_normalize_images(col_test_feats).half().requires_grad_(False)
 
-            # NOT PADDING FOR NOW, GOT AN ERROR SINCE I HAD HALF PRECISION HERE AND F.pad it says is not defined for that
-            if DONE_Brandon_DEBUG: 
-                # Pad the GPU training dataset
-                if hyp['net']['pad_amount'] > 0:
-                    ## Uncomfortable shorthand, but basically we pad evenly on all _4_ sides with the pad_amount specified in the original dictionary
-                    col_train_feats = F.pad(col_train_feats, (hyp['net']['pad_amount'],)*4, 'reflect')
             
             # Convert this to one-hot to support the usage of cutmix (or whatever strange label tricks/magic you desire!)
             col_train_labels = F.one_hot(col_train_labels).half()
@@ -1371,6 +1370,9 @@ if __name__ == "__main__":
 
             train_data_by_col[col_num] = features_labels_to_dict(features=col_train_feats, labels=col_train_labels)
             test_data_by_col[col_num] = features_labels_to_dict(features=col_test_feats, labels=col_test_labels)
+
+
+            
         
         ##############################################################
 
